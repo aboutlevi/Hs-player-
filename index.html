@@ -1,47 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <title>Lecteur M3U8 - Hs Player</title>
+  <meta charset="UTF-8">
+  <title>Lecteur M3U8 - Test en ligne</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
-      background-color: #000;
-      color: white;
+      font-family: Arial, sans-serif;
       text-align: center;
-      padding-top: 50px;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      width: 80%;
+      max-width: 500px;
+      font-size: 16px;
     }
     video {
+      margin-top: 20px;
       width: 90%;
       max-width: 800px;
       height: auto;
-      border: 3px solid #fff;
+      border: 2px solid #333;
       border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Lecteur M3U8 Test</h1>
+
+  <h2>Lecteur de flux M3U8 (HLS)</h2>
+
+  <input type="text" id="m3u8Url" placeholder="Colle ici le lien m3u8">
+  <br>
+  <button onclick="playStream()">Lire le flux</button>
+
   <video id="video" controls autoplay></video>
 
   <script>
-    var video = document.getElementById('video');
-    var videoSrc = 'http://m-iptv.net:6204/live/AFEOdvNlBf/3zrFg7Q96M/9022.m3u8';
+    function playStream() {
+      const video = document.getElementById('video');
+      const m3u8Url = document.getElementById('m3u8Url').value;
 
-    if (Hls.isSupported()) {
-      var hls = new Hls();
-      hls.loadSource(videoSrc);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED,function() {
-        video.play();
-      });
-    }
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = videoSrc;
-      video.addEventListener('loadedmetadata', function() {
-        video.play();
-      });
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(m3u8Url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = m3u8Url;
+        video.addEventListener('loadedmetadata', function () {
+          video.play();
+        });
+      } else {
+        alert('Ton navigateur ne supporte pas HLS (m3u8). Essaie avec Chrome ou Firefox.');
+      }
     }
   </script>
+
 </body>
 </html>
