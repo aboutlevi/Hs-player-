@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lecteur HLS</title>
+  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+  <style>
+    body { background-color: #000; color: white; text-align: center; }
+    .video-container { max-width: 800px; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h2>Lecteur HLS (.m3u8)</h2>
+  <div class="video-container">
+    <video id="hls-video" class="video-js vjs-default-skin" controls autoplay width="100%" height="auto"></video>
+  </div>
+
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.15.0/videojs-contrib-hls.min.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const streamUrl = urlParams.get("url");
+
+    if (streamUrl) {
+      const player = videojs("hls-video");
+      player.src({
+        src: streamUrl,
+        type: "application/x-mpegURL"
+      });
+    } else {
+      document.querySelector('.video-container').innerHTML = '<p>Ajoute ?url=TON_FLUX.m3u8 à l\'adresse</p>';
+    }
+  </script>
+</body>
+</html>
