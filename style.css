@@ -1,0 +1,23 @@
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  padding: 20px;
+}
+#channel-list {
+  margin-bottom: 20px;
+}
+button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+}
+video {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  background: black;
+}
