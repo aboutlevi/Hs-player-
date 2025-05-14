@@ -2,15 +2,72 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>IPTV Player - Web</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecteur IPTV avec VLC.js</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .video-container {
+      width: 100%;
+      max-width: 600px;
+      height: 400px;
+      background-color: black;
+      margin-top: 20px;
+    }
+    input, button {
+      padding: 12px;
+      margin: 10px;
+      width: 80%;
+      max-width: 500px;
+      font-size: 16px;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>IPTV Web Player (style Drama Live)</h1>
-  <div id="channel-list"></div>
-  <video id="video" controls autoplay></video>
 
-  <script src="player.js"></script>
+  <h2>Lecteur IPTV avec VLC.js</h2>
+
+  <input type="text" id="streamUrl" placeholder="Colle ici ton lien IPTV" />
+  <br>
+  <button onclick="loadStream()">Lire le flux</button>
+
+  <div class="video-container" id="video-container">
+    <div id="vlc-player"></div>
+  </div>
+
+  <!-- Script VLC.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vlc.js@0.1.5/vlc.min.js"></script>
+  <script>
+    function loadStream() {
+      const url = document.getElementById('streamUrl').value.trim();
+      if (!url) return alert("Merci d'entrer un lien valide.");
+
+      // Créer un lecteur VLC avec VLC.js
+      const vlc = new VLCMediaPlayer({
+        targetElement: "vlc-player",
+        media: url,
+        autoplay: true,
+        width: '100%',
+        height: '100%'
+      });
+
+      vlc.play();
+    }
+  </script>
+
 </body>
 </html>
