@@ -2,27 +2,55 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>IPTV Proxy Player</title>
+  <title>Lecteur IPTV via Proxy</title>
   <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
-  <style>body { background: #000; color: white; text-align: center; }</style>
+  <style>
+    body { background: #000; color: white; text-align: center; padding: 20px; }
+    .input-container { margin: 20px auto; max-width: 600px; }
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 5px;
+      border: none;
+      background-color: #1e90ff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .video-container { max-width: 800px; margin: auto; }
+  </style>
 </head>
 <body>
-  <h2>Lecteur IPTV via Proxy</h2>
-  <video id="video" class="video-js vjs-default-skin" controls autoplay width="640" height="360"></video>
+  <h2>Lecteur IPTV (via proxy local)</h2>
+
+  <div class="input-container">
+    <input type="text" id="fluxInput" placeholder="Colle ici ton lien IPTV">
+    <button onclick="lireFlux()">Lire</button>
+  </div>
+
+  <div class="video-container">
+    <video id="video" class="video-js vjs-default-skin" controls autoplay width="100%" height="auto"></video>
+  </div>
 
   <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const flux = params.get("flux");
+    function lireFlux() {
+      const lien = document.getElementById("fluxInput").value;
+      if (!lien) return alert("Entre un lien d'abord");
 
-    if (flux) {
       const player = videojs("video");
       player.src({
-        src: `http://TON_IP:8000/proxy?url=${encodeURIComponent(flux)}`,
-        type: 'video/mp2t' // MPEG-TS
+        src: `http://192.168.0.4:8000/proxy?url=${encodeURIComponent(lien)}`,
+        type: "video/mp2t"
       });
-    } else {
-      document.body.innerHTML += "<p>Ajoute ?flux=TON_URL</p>";
+      player.play();
     }
   </script>
 </body>
