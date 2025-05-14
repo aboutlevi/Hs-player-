@@ -1,57 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Lecteur IPTV via Proxy</title>
-  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lecteur IPTV Universel</title>
   <style>
-    body { background: #000; color: white; text-align: center; padding: 20px; }
-    .input-container { margin: 20px auto; max-width: 600px; }
-    input[type="text"] {
-      width: 80%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-left: 5px;
-      border: none;
-      background-color: #1e90ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
+    #player {
+      width: 100%;
+      height: 100vh;
+      background: #000;
     }
-    .video-container { max-width: 800px; margin: auto; }
   </style>
 </head>
 <body>
-  <h2>Lecteur IPTV (via proxy local)</h2>
 
-  <div class="input-container">
-    <input type="text" id="fluxInput" placeholder="Colle ici ton lien IPTV">
-    <button onclick="lireFlux()">Lire</button>
-  </div>
+<video id="player" controls autoplay></video>
 
-  <div class="video-container">
-    <video id="video" class="video-js vjs-default-skin" controls autoplay width="100%" height="auto"></video>
-  </div>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+  const video = document.getElementById('player');
 
-  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-  <script>
-    function lireFlux() {
-      const lien = document.getElementById("fluxInput").value;
-      if (!lien) return alert("Entre un lien d'abord");
+  // Remplace ce lien par ton flux IPTV
+  const videoUrl = new URLSearchParams(window.location.search).get("url") || "http://mmesk241018a.wanicelife.com:8880/D12m3783/75587387/2830";
 
-      const player = videojs("video");
-      player.src({
-        src: `http://192.168.0.4:8000/proxy?url=${encodeURIComponent(lien)}`,
-        type: "video/mp2t"
-      });
-      player.play();
-    }
-  </script>
+  function canUseNativeHLS() {
+    return video.canPlayType('application/vnd.apple.mpegurl');
+  }
+
+  if (canUseNativeHLS()) {
+    video.src = videoUrl;
+  } else if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(videoUrl);
+    hls.attachMedia(video);
+  } else {
+    video.src = videoUrl; // Fallback pour MP4 ou TS
+  }
+</script>
+
 </body>
 </html>
