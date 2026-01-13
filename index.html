@@ -1,42 +1,145 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test HLS.js</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>⚡ SportStream Pro - Lecteur Premium</title>
+
+    <!-- Bootstrap 5 Dark Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Video.js avec skin forest -->
+    <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
+    <link href="https://unpkg.com/@videojs/themes@1.0.0/dist/forest/index.css" rel="stylesheet">
+
+    <style>
+        body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+        .navbar-glass { background: rgba(15,23,42,0.8); backdrop-filter: blur(10px); border-bottom:1px solid rgba(255,255,255,0.1);}
+        .card-glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(10px); border-radius:20px; border:1px solid rgba(255,255,255,0.1); transition:all 0.3s ease;}
+        .card-glass:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.3);}
+        .player-container { border-radius:20px; overflow:hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);}
+        .btn-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:50px; padding:10px 20px;}
+        .channel-card { cursor:pointer; transition:0.3s; border-left:4px solid transparent;}
+        .channel-card:hover { border-left-color:#667eea; background: rgba(102,126,234,0.1);}
+        .channel-card.active { border-left-color:#10b981; background: rgba(16,185,129,0.1);}
+        .badge-4k { background: linear-gradient(135deg,#ff6b6b,#ee5a24);}
+        .badge-fhd { background: linear-gradient(135deg,#48dbfb,#0abde3);}
+        .badge-hd { background: linear-gradient(135deg,#1dd1a1,#10ac84);}
+        .badge-sd { background: linear-gradient(135deg,#8395a7,#576574);}
+        .badge-live { background: linear-gradient(135deg,#ff9f43,#ee5253);}
+    </style>
 </head>
 <body>
-    <h2>Test Player HLS.js</h2>
-    <video id="video" width="640" height="360" controls></video>
+<nav class="navbar navbar-glass fixed-top p-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand fw-bold fs-4" href="#">SportStream Pro</a>
+        <div>
+            <button class="btn btn-gradient-primary" onclick="toggleTheme()"><i class="bi bi-moon-stars"></i> Thème</button>
+        </div>
+    </div>
+</nav>
 
-    <script>
-        const video = document.getElementById('video');
-        const streamURL = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
+<div class="container mt-5 pt-5">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="player-container">
+                <video id="video-player" class="video-js vjs-theme-forest vjs-fluid" controls preload="auto"
+                       poster="https://images.unsplash.com/photo-1551958219-acbc608c6377?w=1200&auto=format">
+                    <p class="vjs-no-js">JavaScript est requis pour ce lecteur.</p>
+                </video>
+            </div>
+        </div>
+        <div class="col-12 mb-3 d-flex gap-2">
+            <select id="qualitySelect" class="form-select form-select-sm" style="width:auto;">
+                <option value="auto">Qualité Auto</option>
+                <option value="1080">Full HD</option>
+                <option value="720">HD</option>
+                <option value="480">SD</option>
+            </select>
+            <button class="btn btn-sm btn-outline-light" onclick="toggleFullscreen()"><i class="bi bi-arrows-fullscreen"></i> Plein écran</button>
+            <button class="btn btn-sm btn-outline-success" onclick="reloadStream()"><i class="bi bi-arrow-clockwise"></i> Recharger</button>
+            <button class="btn btn-sm btn-outline-warning" onclick="captureSnapshot()"><i class="bi bi-camera"></i> Capture</button>
+        </div>
+        <div class="col-12 mb-3">
+            <input type="text" id="channelSearch" class="form-control" placeholder="Rechercher une chaîne...">
+        </div>
+        <div class="col-12">
+            <div id="channelsContainer" class="row"></div>
+        </div>
+    </div>
+</div>
 
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(streamURL);
-            hls.attachMedia(video);
+<footer class="text-center py-3 mt-3">⚡ SportStream Pro - 2026</footer>
 
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
-                console.log("Lecture démarrée !");
-            });
+<script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+const channels = [
+    {name:"Test Stream 1", url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", quality:"HD", group:"Live"},
+    {name:"Test Stream 2", url:"https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8", quality:"FHD", group:"Football"},
+];
 
-            hls.on(Hls.Events.ERROR, function(event, data) {
-                console.error("Erreur HLS:", data);
-            });
+let currentChannel = null;
+const player = videojs('video-player', {autoplay:true, controls:true, fluid:true});
+let hls = null;
 
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari
-            video.src = streamURL;
-            video.addEventListener('loadedmetadata', function() {
-                video.play();
-            });
-        } else {
-            alert("HLS non supporté par ce navigateur !");
-        }
-    </script>
+function loadChannel(channel){
+    currentChannel = channel;
+    // HLS.js
+    if(hls){ hls.destroy(); hls=null; }
+    if(Hls.isSupported()){
+        hls = new Hls();
+        hls.loadSource(channel.url);
+        hls.attachMedia(player.tech().el());
+        hls.on(Hls.Events.MANIFEST_PARSED, ()=>{player.play();});
+    } else {
+        player.src({src:channel.url, type:'application/x-mpegURL'});
+        player.play();
+    }
+    updateActiveCard();
+}
+
+function updateActiveCard(){
+    document.querySelectorAll('.channel-card').forEach(card=>card.classList.remove('active'));
+    const card = document.querySelector(`.channel-card[data-url='${currentChannel.url}']`);
+    if(card) card.classList.add('active');
+}
+
+// Render channels
+const container = document.getElementById('channelsContainer');
+channels.forEach(ch=>{
+    const col = document.createElement('div');
+    col.className = 'col-12 col-md-6 col-lg-4 mb-2';
+    col.innerHTML = `<div class="channel-card card-glass p-2" data-url="${ch.url}" onclick="loadChannel(${JSON.stringify(ch)})">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${ch.name}</strong>
+                            <span class="badge ${ch.quality.toLowerCase().includes('hd')?'badge-hd':'badge-sd'}">${ch.quality}</span>
+                        </div>
+                        <small>${ch.group}</small>
+                     </div>`;
+    container.appendChild(col);
+});
+
+// Load first channel
+if(channels.length>0) loadChannel(channels[0]);
+
+// Search
+document.getElementById('channelSearch').addEventListener('input', e=>{
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.channel-card').forEach(card=>{
+        card.style.display = card.querySelector('strong').textContent.toLowerCase().includes(term)?'block':'none';
+    });
+});
+
+// Controls
+function toggleFullscreen(){ player.requestFullscreen(); }
+function reloadStream(){ if(currentChannel) loadChannel(currentChannel); }
+function captureSnapshot(){ alert('Fonction capture non implémentée'); }
+function toggleTheme(){
+    const html = document.documentElement;
+    html.setAttribute('data-bs-theme', html.getAttribute('data-bs-theme')==='dark'?'light':'dark');
+}
+</script>
 </body>
-</html>
+                    </html>
