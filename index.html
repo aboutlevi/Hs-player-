@@ -630,7 +630,9 @@
                         startFragPrefetch: true
                     });
                     
-                    this.hls.loadSource(url);
+                   const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+console.log("🎯 Using CORS proxy for stream");
+this.hls.loadSource(proxyUrl); 
                     this.hls.attachMedia(this.player.tech().el());
                     
                     this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -770,3 +772,4 @@
     </script>
 </body>
 </html>
+
