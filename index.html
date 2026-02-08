@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ Lecteur IPTV Web</title>
+<title>⚡ Lecteur IPTV Web Pro</title>
 
 <!-- Bootstrap 5 Dark Theme -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,6 +11,9 @@
 
 <!-- Video.js -->
 <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
+
+<!-- Toastr pour notifications -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
 <style>
 :root {
@@ -27,22 +30,25 @@ body {
     color: #e2e8f0; 
     font-family: 'Segoe UI', sans-serif;
     min-height: 100vh;
+    padding-bottom: 60px;
 }
 
-/* Navigation simple */
+/* Navigation */
 .navbar {
     background: var(--dark-bg);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 /* Player Container */
 .player-container { 
-    max-width: 1000px; 
+    max-width: 1200px; 
     margin: 0 auto; 
     border-radius: 12px; 
     overflow: hidden;
     margin-bottom: 20px;
     position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Mode TV/Cinéma */
@@ -68,14 +74,15 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 300px;
-    height: 170px;
+    width: 320px;
+    height: 180px;
     z-index: 9999;
     border-radius: 8px;
     overflow: hidden;
     border: 2px solid var(--primary);
     background: #000;
     display: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
 }
 
 .mini-player .video-js {
@@ -86,59 +93,76 @@ body {
 /* Channel Cards */
 .channel-card { 
     cursor: pointer; 
-    padding: 12px; 
-    border-radius: 8px; 
+    padding: 15px; 
+    border-radius: 10px; 
     background: var(--card-bg); 
-    margin-bottom: 8px; 
+    margin-bottom: 10px; 
     transition: all 0.3s ease;
     border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
 }
 
 .channel-card:hover {
     background: #2d3748;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .channel-card.active { 
     border: 2px solid var(--primary); 
-    background: rgba(14, 165, 233, 0.1);
+    background: rgba(14, 165, 233, 0.15);
+}
+
+.channel-card.favorite::after {
+    content: "⭐";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 12px;
+}
+
+.channel-card.recommended {
+    border-left: 4px solid var(--warning);
 }
 
 /* Badges qualité */
 .badge {
     font-size: 0.7em;
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-weight: 600;
 }
 
 .badge-live { background: var(--danger); }
-.badge-4k { background: #f97316; }
-.badge-fhd { background: var(--primary); }
-.badge-hd { background: var(--success); }
-.badge-sd { background: #64748b; }
+.badge-4k { background: linear-gradient(45deg, #f97316, #f59e0b); }
+.badge-fhd { background: linear-gradient(45deg, #0ea5e9, #3b82f6); }
+.badge-hd { background: linear-gradient(45deg, #10b981, #22c55e); }
+.badge-sd { background: linear-gradient(45deg, #64748b, #94a3b8); }
 
 /* EPG */
 .epg-container {
-    background: rgba(30, 41, 59, 0.8);
-    border-radius: 8px;
-    padding: 12px;
-    margin-top: 10px;
-    display: none;
+    background: rgba(30, 41, 59, 0.9);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .epg-progress {
-    height: 4px;
+    height: 6px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    margin: 8px 0;
+    border-radius: 3px;
+    margin: 10px 0;
     overflow: hidden;
 }
 
 .epg-progress-bar {
     height: 100%;
-    background: var(--primary);
-    border-radius: 2px;
+    background: linear-gradient(90deg, var(--primary), #3b82f6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 
 /* Status */
@@ -148,23 +172,24 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 100;
     display: none;
+    backdrop-filter: blur(5px);
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 @keyframes spin {
@@ -173,55 +198,180 @@ body {
 
 /* Error Message */
 .error-message {
-    background: rgba(239, 68, 68, 0.9);
+    background: linear-gradient(45deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
     color: white;
-    padding: 12px;
-    border-radius: 8px;
-    margin: 10px 0;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
     display: none;
+    border-left: 4px solid #ef4444;
 }
 
 /* Controls */
 .controls-bar {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.5);
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
 }
 
 .control-btn {
     background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 10px 15px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    font-weight: 500;
 }
 
 .control-btn:hover {
     background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.control-btn.active {
+    background: var(--primary);
+    color: white;
 }
 
 /* Now Playing */
 .now-playing {
-    background: rgba(30, 41, 59, 0.8);
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* Recommandations */
+.recommendations-container {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    border-left: 4px solid var(--warning);
+}
+
+/* Search */
+.search-container {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* Filter badges */
+.filter-badge {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-badge.active {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+/* Quality selector */
+.quality-selector {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
+    padding: 5px;
+    display: none;
+}
+
+/* Token status */
+.token-status {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Subtitle display */
+.subtitle-display {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    max-width: 80%;
+    text-align: center;
+    z-index: 1000;
+    font-size: 1.2em;
+    display: none;
+    backdrop-filter: blur(5px);
+}
+
+/* EPG Grid */
+.epg-grid {
+    display: grid;
+    grid-template-columns: 200px repeat(24, 1fr);
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+}
+
+.epg-channel-header {
+    background: var(--card-bg);
+    padding: 10px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.epg-time-header {
+    background: var(--card-bg);
+    padding: 10px;
+    text-align: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.epg-program {
+    background: rgba(14, 165, 233, 0.2);
+    padding: 8px;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.epg-program:hover {
+    background: rgba(14, 165, 233, 0.4);
+}
+
+.epg-program.current {
+    background: rgba(14, 165, 233, 0.6);
+    border-color: var(--primary);
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
     .player-container {
-        margin: 0 -15px 15px;
+        margin: 0 -10px 15px;
         border-radius: 0;
     }
     
@@ -235,22 +385,56 @@ body {
     }
     
     .control-btn {
+        padding: 12px;
+        flex: 1;
+        min-width: 44px;
+        justify-content: center;
+    }
+    
+    .controls-bar {
+        gap: 5px;
         padding: 10px;
+    }
+    
+    .now-playing {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
     }
 }
 
 /* Touch optimizations */
 @media (hover: none) and (pointer: coarse) {
     .channel-card {
-        padding: 15px 12px;
-        min-height: 60px;
+        padding: 18px 15px;
+        min-height: 70px;
     }
     
     .control-btn {
-        min-height: 44px;
-        min-width: 44px;
+        min-height: 50px;
+        min-width: 50px;
         justify-content: center;
     }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
 }
 </style>
 </head>
@@ -259,10 +443,18 @@ body {
 <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container">
         <span class="navbar-brand fs-5 fw-bold">
-            <i class="bi bi-tv text-primary me-2"></i>Lecteur IPTV
+            <i class="bi bi-tv text-primary me-2"></i>IPTV Pro
         </span>
         <div id="nowPlayingInfo" class="text-muted">
             <small id="currentPlaying">-</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="player.toggleTokenDisplay()">
+                <i class="bi bi-key"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-success" onclick="player.showEPGGrid()">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </button>
         </div>
     </div>
 </nav>
@@ -282,6 +474,20 @@ body {
             <div class="loading-spinner"></div>
             <div id="statusText" class="mt-2">Chargement...</div>
         </div>
+        
+        <!-- Quality Selector -->
+        <div id="qualitySelector" class="quality-selector">
+            <div class="btn-group">
+                <button class="btn btn-sm btn-dark" onclick="player.setQuality('auto')">Auto</button>
+                <button class="btn btn-sm btn-dark" onclick="player.setQuality('4k')">4K</button>
+                <button class="btn btn-sm btn-dark" onclick="player.setQuality('fhd')">FHD</button>
+                <button class="btn btn-sm btn-dark" onclick="player.setQuality('hd')">HD</button>
+                <button class="btn btn-sm btn-dark" onclick="player.setQuality('sd')">SD</button>
+            </div>
+        </div>
+        
+        <!-- Subtitle Display -->
+        <div id="subtitleDisplay" class="subtitle-display"></div>
         
         <!-- Video Player -->
         <video id="video-player" class="video-js vjs-fluid" controls preload="auto" playsinline>
@@ -314,6 +520,22 @@ body {
                 <i class="bi bi-aspect-ratio"></i>
                 <span>Mini</span>
             </button>
+            <button class="control-btn" onclick="player.showQualitySelector()">
+                <i class="bi bi-hd"></i>
+                <span>Qualité</span>
+            </button>
+            <button class="control-btn" onclick="player.toggleAutoSubtitles()" id="subtitleBtn">
+                <i class="bi bi-subtitles"></i>
+                <span>ST</span>
+            </button>
+            <button class="control-btn" onclick="player.rewind(30)">
+                <i class="bi bi-rewind"></i>
+                <span>-30s</span>
+            </button>
+            <button class="control-btn" onclick="player.fastForward(30)">
+                <i class="bi bi-fast-forward"></i>
+                <span>+30s</span>
+            </button>
         </div>
     </div>
 
@@ -323,16 +545,43 @@ body {
     <!-- Now Playing -->
     <div class="now-playing">
         <div>
-            <strong id="currentChannelName">-</strong>
+            <strong id="currentChannelName" class="fs-5">-</strong>
             <div class="d-flex align-items-center gap-2 mt-1">
                 <span id="currentQuality" class="badge badge-hd">HD</span>
                 <span id="liveIndicator" class="badge badge-live d-none">LIVE</span>
+                <span id="tokenStatusBadge" class="badge bg-secondary d-none">Token</span>
             </div>
         </div>
-        <div class="d-flex align-items-center">
-            <i class="bi bi-volume-down me-2"></i>
-            <input type="range" id="volumeSlider" min="0" max="100" value="50" 
-                   style="width: 100px;" oninput="updateVolume(this.value)">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-outline-warning" onclick="player.addToFavorites()" id="favoriteBtn">
+                <i class="bi bi-star"></i>
+            </button>
+            <div class="d-flex align-items-center">
+                <i class="bi bi-volume-down me-2"></i>
+                <input type="range" id="volumeSlider" min="0" max="100" value="50" 
+                       style="width: 120px;" oninput="updateVolume(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-container">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="channelSearch" class="form-control" 
+                   placeholder="Rechercher une chaîne..." 
+                   oninput="player.filterChannels(this.value)">
+            <button class="btn btn-outline-secondary" type="button" onclick="player.clearFilter()">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <span class="badge filter-badge bg-primary" onclick="player.filterByGroup('Tous')">Tous</span>
+            <span class="badge filter-badge bg-success" onclick="player.filterByGroup('Sport')">Sport</span>
+            <span class="badge filter-badge bg-warning" onclick="player.filterByGroup('Film')">Film</span>
+            <span class="badge filter-badge bg-info" onclick="player.filterByGroup('Info')">Info</span>
+            <span class="badge filter-badge bg-danger" onclick="player.filterByGroup('Jeunesse')">Jeunesse</span>
+            <span class="badge filter-badge bg-secondary" onclick="player.showFavorites()">Favoris</span>
         </div>
     </div>
 
@@ -340,7 +589,12 @@ body {
     <div class="epg-container" id="epgContainer">
         <div class="d-flex justify-content-between align-items-center">
             <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Programme</h6>
-            <small class="text-muted" id="epgTime"></small>
+            <div class="d-flex align-items-center gap-2">
+                <small class="text-muted" id="epgTime"></small>
+                <button class="btn btn-sm btn-outline-primary" onclick="player.setReminder()">
+                    <i class="bi bi-bell"></i>
+                </button>
+            </div>
         </div>
         <div class="mt-2" id="currentProgram">Chargement du programme...</div>
         <div class="epg-progress mt-2">
@@ -351,12 +605,30 @@ body {
         </div>
     </div>
 
+    <!-- Recommandations -->
+    <div id="recommendationsContainer" class="recommendations-container" style="display: none;">
+        <h6><i class="bi bi-stars me-2"></i>Recommandé pour vous</h6>
+        <div class="row g-2 mt-2" id="recommendationsList">
+            <!-- Recommendations will be added here -->
+        </div>
+    </div>
+
     <!-- Channels -->
     <div class="mt-4">
-        <h5 class="mb-3">
-            <i class="bi bi-list-ul me-2"></i>Chaînes
-            <span class="badge bg-secondary ms-2" id="channelCount">0</span>
-        </h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>Chaînes
+                <span class="badge bg-secondary ms-2" id="channelCount">0</span>
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="player.sortChannels('name')">
+                    <i class="bi bi-sort-alpha-down"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="player.sortChannels('quality')">
+                    <i class="bi bi-sort-numeric-down"></i>
+                </button>
+            </div>
+        </div>
         
         <div class="row g-2" id="channelsContainer">
             <!-- Channels will be added here -->
@@ -365,21 +637,72 @@ body {
 
 </div>
 
+<!-- EPG Grid Modal -->
+<div class="modal fade" id="epgModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-tv me-2"></i>Guide des programmes
+                </h5>
+                <div class="d-flex gap-2">
+                    <input type="date" id="epgDate" class="form-control form-control-sm" 
+                           style="width: 140px;" onchange="player.changeEPGDate(this.value)">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="player.refreshEPG()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <div id="epgGrid" style="overflow-x: auto; height: calc(100vh - 120px);">
+                    <!-- Grid générée dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Token Status -->
+<div id="tokenStatus" class="token-status d-none">
+    <i class="bi bi-shield-check text-success me-1"></i>
+    <small>Token valide</small>
+</div>
+
+<!-- Scripts -->
 <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
 <script>
+// Configuration
+toastr.options = {
+    positionClass: "toast-top-right",
+    progressBar: true,
+    timeOut: 3000,
+    closeButton: true
+};
+
 class IPTVPlayer {
     constructor() {
         this.player = null;
         this.hls = null;
-        this.dash = null;
         this.channels = [];
         this.currentChannel = null;
         this.isCinemaMode = false;
         this.isMiniPlayer = false;
-        this.supportedFormats = ['.m3u8', '.mpd', '.mp4', '.webm'];
-        this.unsupportedFormats = ['.ts', '.mdp', 'udp://', 'rtmp://', 'rtsp://'];
+        
+        // Token management
+        this.tokenManager = new TokenManager();
+        
+        // Intelligent features
+        this.epgManager = new EPGManager();
+        this.qualityDetector = new QualityDetector();
+        this.recommendationEngine = new RecommendationEngine();
+        this.channelMemory = new ChannelMemory();
+        this.autoSubtitles = new AutoSubtitles();
+        this.timeShift = new TimeShift();
         
         this.init();
     }
@@ -389,6 +712,11 @@ class IPTVPlayer {
         this.loadContent();
         this.setupEventListeners();
         this.loadUserSettings();
+        
+        // Initialize intelligent features
+        this.recommendationEngine.init();
+        this.qualityDetector.monitorNetwork();
+        this.epgManager.startAutoUpdate();
     }
 
     setupPlayer() {
@@ -401,28 +729,37 @@ class IPTVPlayer {
                 vhs: {
                     overrideNative: true
                 }
-            }
+            },
+            playbackRates: [0.5, 1, 1.5, 2]
         });
 
         // Player events
         this.player.on('waiting', () => this.showStatus('Chargement...'));
-        this.player.on('playing', () => this.hideStatus());
+        this.player.on('playing', () => {
+            this.hideStatus();
+            if (this.currentChannel) {
+                this.channelMemory.recordView(this.currentChannel, 1);
+                this.autoSubtitles.startIfEnabled();
+            }
+        });
         this.player.on('error', (e) => this.handleError(e));
+        this.player.on('volumechange', () => this.saveUserSettings());
     }
 
-    loadContent() {
+    async loadContent() {
         const params = new URLSearchParams(window.location.search);
         
         // Lecture directe via ?src=
         const directSrc = params.get('src');
         if (directSrc) {
             const channel = {
+                id: 'direct',
                 name: 'Flux direct',
                 url: directSrc
             };
             this.channels = [channel];
             this.displayChannels();
-            this.loadChannel(channel);
+            await this.loadChannel(channel);
             return;
         }
         
@@ -438,13 +775,13 @@ class IPTVPlayer {
                 if (lastChannel) {
                     const channel = this.channels.find(c => c.id === lastChannel || c.name === lastChannel);
                     if (channel) {
-                        this.loadChannel(channel);
+                        await this.loadChannel(channel);
                         return;
                     }
                 }
                 
                 if (this.channels.length > 0) {
-                    this.loadChannel(this.channels[0]);
+                    await this.loadChannel(this.channels[0]);
                 }
             } catch (e) {
                 this.showError('Erreur de chargement des chaînes');
@@ -457,20 +794,11 @@ class IPTVPlayer {
     detectStreamType(url) {
         const lowerUrl = url.toLowerCase();
         
-        // Vérifier formats non supportés
-        for (const format of this.unsupportedFormats) {
-            if (lowerUrl.includes(format)) {
-                throw new Error(`Format non supporté: ${format}`);
-            }
-        }
-        
-        // Détecter type
         if (lowerUrl.includes('.m3u8')) return 'hls';
         if (lowerUrl.includes('.mpd')) return 'dash';
         if (lowerUrl.includes('.mp4')) return 'mp4';
         if (lowerUrl.includes('.webm')) return 'webm';
         
-        // Par défaut, essayer HLS
         return 'hls';
     }
 
@@ -487,29 +815,45 @@ class IPTVPlayer {
             
             // Nettoyer anciens lecteurs
             if (this.hls) this.hls.destroy();
-            if (this.dash) this.dash.destroy();
             
-            // Détecter et charger selon type
-            const streamType = this.detectStreamType(channel.url);
+            // Gérer le token si présent
+            let url = channel.url;
+            if (url.includes('{token}')) {
+                const token = await this.tokenManager.getValidToken();
+                if (token) {
+                    url = url.replace('{token}', token);
+                    this.showTokenStatus(true);
+                } else {
+                    this.showError('Token invalide ou expiré');
+                    return;
+                }
+            }
             
-            switch(streamType) {
-                case 'hls':
-                    await this.loadHLS(channel.url);
-                    break;
-                case 'dash':
-                    await this.loadDASH(channel.url);
-                    break;
-                case 'mp4':
-                case 'webm':
-                    await this.loadNative(channel.url, streamType);
-                    break;
-                default:
-                    throw new Error('Format non reconnu');
+            // Détecter qualité
+            const quality = this.qualityDetector.detectFromURL(url);
+            channel.quality = quality;
+            
+            // Charger selon type
+            const streamType = this.detectStreamType(url);
+            
+            if (streamType === 'hls') {
+                await this.loadHLS(url);
+            } else {
+                await this.loadNative(url, streamType);
             }
             
             this.currentChannel = channel;
+            
+            // Mettre à jour les fonctionnalités intelligentes
             this.updateEPG(channel);
+            this.updateRecommendations();
+            this.channelMemory.autoAddToFavorites(channel);
+            this.timeShift.startRecording(channel);
+            
             this.hideStatus();
+            
+            // Afficher notification
+            toastr.success(`Chaîne ${channel.name} chargée`, 'IPTV');
             
         } catch(error) {
             this.showError(error.message);
@@ -520,7 +864,12 @@ class IPTVPlayer {
     loadHLS(url) {
         return new Promise((resolve, reject) => {
             if (Hls.isSupported()) {
-                this.hls = new Hls();
+                this.hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                
                 this.hls.loadSource(url);
                 this.hls.attachMedia(this.player.tech().el());
                 
@@ -531,9 +880,26 @@ class IPTVPlayer {
                 
                 this.hls.on(Hls.Events.ERROR, (event, data) => {
                     if (data.fatal) {
-                        reject(new Error('Erreur HLS'));
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                // Tentative de rechargement
+                                this.reloadStream();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                this.hls.recoverMediaError();
+                                break;
+                            default:
+                                reject(new Error('Erreur HLS: ' + data.details));
+                        }
                     }
                 });
+                
+                // Détecter les qualités disponibles
+                this.hls.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
+                    const qualities = this.qualityDetector.detectFromManifest(data);
+                    this.showQualityOptions(qualities);
+                });
+                
             } else if (this.player.canPlayType('application/vnd.apple.mpegurl')) {
                 this.player.src({ src: url, type: 'application/x-mpegURL' });
                 this.player.play();
@@ -542,11 +908,6 @@ class IPTVPlayer {
                 reject(new Error('HLS non supporté'));
             }
         });
-    }
-
-    loadDASH(url) {
-        // DASH serait implémenté avec dash.js si besoin
-        throw new Error('DASH non implémenté dans cette version');
     }
 
     loadNative(url, type) {
@@ -571,19 +932,28 @@ class IPTVPlayer {
         
         this.channels.forEach((channel, index) => {
             const col = document.createElement('div');
-            col.className = 'col-12 col-md-6 col-lg-4';
+            col.className = 'col-12 col-md-6 col-lg-4 fade-in';
             
-            const quality = channel.quality || 'HD';
+            const quality = channel.quality || this.qualityDetector.detectFromURL(channel.url);
             const isLive = channel.live || false;
+            const isFavorite = this.channelMemory.isFavorite(channel);
+            
+            let cardClass = 'channel-card';
+            if (isFavorite) cardClass += ' favorite';
+            if (this.recommendationEngine.isRecommended(channel)) cardClass += ' recommended';
             
             col.innerHTML = `
-                <div class="channel-card" onclick="player.loadChannel(player.channels[${index}])">
+                <div class="${cardClass}" onclick="player.loadChannel(player.channels[${index}])">
                     <div class="d-flex justify-content-between align-items-start">
                         <strong>${channel.name}</strong>
                         <span class="badge ${this.getBadgeClass(quality)}">${quality}</span>
                     </div>
                     ${channel.group ? `<small class="text-muted d-block mt-1">${channel.group}</small>` : ''}
-                    ${isLive ? '<span class="badge badge-live mt-2">LIVE</span>' : ''}
+                    <div class="d-flex gap-2 mt-2">
+                        ${isLive ? '<span class="badge badge-live">LIVE</span>' : ''}
+                        ${channel.epg ? '<span class="badge bg-info">EPG</span>' : ''}
+                        ${channel.token ? '<span class="badge bg-warning">Token</span>' : ''}
+                    </div>
                 </div>
             `;
             
@@ -604,17 +974,28 @@ class IPTVPlayer {
         document.getElementById('currentChannelName').textContent = channel.name;
         document.getElementById('currentPlaying').textContent = channel.name;
         
-        if (channel.quality) {
-            const badgeClass = this.getBadgeClass(channel.quality);
-            const qualityElement = document.getElementById('currentQuality');
-            qualityElement.textContent = channel.quality;
-            qualityElement.className = `badge ${badgeClass}`;
+        const quality = channel.quality || 'HD';
+        const badgeClass = this.getBadgeClass(quality);
+        const qualityElement = document.getElementById('currentQuality');
+        qualityElement.textContent = quality;
+        qualityElement.className = `badge ${badgeClass}`;
+        
+        // Mettre à jour le bouton favori
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        if (this.channelMemory.isFavorite(channel)) {
+            favoriteBtn.innerHTML = '<i class="bi bi-star-fill"></i>';
+            favoriteBtn.classList.add('active');
+        } else {
+            favoriteBtn.innerHTML = '<i class="bi bi-star"></i>';
+            favoriteBtn.classList.remove('active');
         }
         
-        if (channel.live) {
-            document.getElementById('liveIndicator').classList.remove('d-none');
+        // Afficher/masquer badge token
+        const tokenBadge = document.getElementById('tokenStatusBadge');
+        if (channel.url && channel.url.includes('{token}')) {
+            tokenBadge.classList.remove('d-none');
         } else {
-            document.getElementById('liveIndicator').classList.add('d-none');
+            tokenBadge.classList.add('d-none');
         }
     }
 
@@ -623,36 +1004,38 @@ class IPTVPlayer {
             card.classList.remove('active');
         });
         
-        // Trouver et activer la bonne carte
         this.channels.forEach((c, index) => {
             if (c === channel || c.id === channel.id || c.name === channel.name) {
                 const cards = document.querySelectorAll('.channel-card');
                 if (cards[index]) {
                     cards[index].classList.add('active');
-                    // Scroll doucement vers la carte
                     cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             }
         });
     }
 
-    updateEPG(channel) {
+    async updateEPG(channel) {
         const epgContainer = document.getElementById('epgContainer');
+        const epgData = await this.epgManager.getEPGForChannel(channel.name);
         
-        if (channel.epg) {
-            document.getElementById('currentProgram').textContent = channel.epg.current || 'Programme inconnu';
-            document.getElementById('nextProgram').innerHTML = `<small><i class="bi bi-arrow-right me-1"></i>Suivant: ${channel.epg.next || '-'}</small>`;
+        if (epgData && epgData.current) {
+            document.getElementById('currentProgram').textContent = epgData.current.title;
+            document.getElementById('nextProgram').innerHTML = 
+                `<small><i class="bi bi-arrow-right me-1"></i>Suivant: ${epgData.next?.title || '-'}</small>`;
             document.getElementById('epgTime').textContent = new Date().toLocaleTimeString();
-            epgContainer.style.display = 'block';
             
-            // Simuler progression
-            setInterval(() => {
-                const progress = Math.floor(Math.random() * 100);
-                document.getElementById('programProgress').style.width = `${progress}%`;
-            }, 30000);
+            const progress = epgData.current.progress || 50;
+            document.getElementById('programProgress').style.width = `${progress}%`;
+            
+            epgContainer.style.display = 'block';
         } else {
             epgContainer.style.display = 'none';
         }
+    }
+
+    updateRecommendations() {
+        this.recommendationEngine.displayRecommendations(this.channels);
     }
 
     showStatus(message) {
@@ -670,18 +1053,30 @@ class IPTVPlayer {
         document.getElementById('errorText').textContent = message;
         errorDiv.style.display = 'block';
         
+        toastr.error(message, 'Erreur');
+        
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
     }
 
-    hideError() {
-        document.getElementById('errorMessage').style.display = 'none';
+    showSuccess(message) {
+        toastr.success(message, 'Succès');
     }
 
-    handleError(error) {
-        console.error('Player error:', error);
-        this.showError('Erreur de lecture - Code: ' + (error.code || 'inconnu'));
+    showTokenStatus(valid) {
+        const tokenStatus = document.getElementById('tokenStatus');
+        if (valid) {
+            tokenStatus.innerHTML = '<i class="bi bi-shield-check text-success me-1"></i><small>Token valide</small>';
+            tokenStatus.classList.remove('d-none');
+        } else {
+            tokenStatus.innerHTML = '<i class="bi bi-shield-exclamation text-danger me-1"></i><small>Token expiré</small>';
+            tokenStatus.classList.remove('d-none');
+        }
+        
+        setTimeout(() => {
+            tokenStatus.classList.add('d-none');
+        }, 3000);
     }
 
     setupEventListeners() {
@@ -693,16 +1088,57 @@ class IPTVPlayer {
         
         // Raccourcis clavier
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                this.togglePlay();
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    this.togglePlay();
+                    break;
+                case 'KeyM':
+                    this.toggleMute();
+                    break;
+                case 'KeyF':
+                    this.toggleFullscreen();
+                    break;
+                case 'KeyC':
+                    this.toggleCinemaMode();
+                    break;
+                case 'KeyR':
+                    this.reloadStream();
+                    break;
+                case 'KeyT':
+                    this.toggleTokenDisplay();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.channelSurf(-1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.channelSurf(1);
+                    break;
+                case 'ArrowLeft':
+                    this.rewind(10);
+                    break;
+                case 'ArrowRight':
+                    this.fastForward(10);
+                    break;
+                case 'Digit1': case 'Digit2': case 'Digit3':
+                case 'Digit4': case 'Digit5': case 'Digit6':
+                case 'Digit7': case 'Digit8': case 'Digit9':
+                    this.selectChannelByNumber(e.key);
+                    break;
             }
-            if (e.code === 'KeyM') {
-                this.toggleMute();
-            }
-            if (e.code === 'KeyF') {
-                this.toggleFullscreen();
-            }
+        });
+        
+        // Network status
+        window.addEventListener('online', () => {
+            this.showSuccess('Connexion rétablie');
+        });
+        
+        window.addEventListener('offline', () => {
+            this.showError('Connexion perdue');
         });
     }
 
@@ -710,10 +1146,15 @@ class IPTVPlayer {
         const settings = localStorage.getItem('iptv_settings');
         if (settings) {
             try {
-                const { volume } = JSON.parse(settings);
-                if (this.player && volume) {
-                    this.player.volume(volume);
-                    document.getElementById('volumeSlider').value = volume * 100;
+                const { volume, muted } = JSON.parse(settings);
+                if (this.player) {
+                    if (volume) {
+                        this.player.volume(volume);
+                        document.getElementById('volumeSlider').value = volume * 100;
+                    }
+                    if (muted !== undefined) {
+                        this.player.muted(muted);
+                    }
                 }
             } catch(e) {
                 console.error('Error loading settings:', e);
@@ -729,7 +1170,7 @@ class IPTVPlayer {
         localStorage.setItem('iptv_settings', JSON.stringify(settings));
     }
 
-    // Méthodes publiques de contrôle
+    // Méthodes de contrôle
     togglePlay() {
         if (this.player.paused()) {
             this.player.play();
@@ -761,6 +1202,7 @@ class IPTVPlayer {
         if (this.isCinemaMode) {
             container.classList.add('cinema-mode');
             document.body.style.overflow = 'hidden';
+            this.showSuccess('Mode TV activé');
         } else {
             container.classList.remove('cinema-mode');
             document.body.style.overflow = 'auto';
@@ -777,8 +1219,9 @@ class IPTVPlayer {
             miniPlayer.appendChild(videoEl);
             miniPlayer.style.display = 'block';
             this.player.fluid(false);
-            this.player.width(300);
-            this.player.height(169);
+            this.player.width(320);
+            this.player.height(180);
+            this.showSuccess('Mini player activé');
         } else {
             document.getElementById('playerContainer').appendChild(videoEl);
             miniPlayer.style.display = 'none';
@@ -789,6 +1232,7 @@ class IPTVPlayer {
     reloadStream() {
         if (this.currentChannel) {
             this.loadChannel(this.currentChannel);
+            this.showSuccess('Flux rechargé');
         }
     }
 
@@ -798,12 +1242,758 @@ class IPTVPlayer {
             this.saveUserSettings();
         }
     }
+
+    // Fonctions intelligentes
+    channelSurf(direction) {
+        const currentIndex = this.channels.findIndex(c => c === this.currentChannel);
+        if (currentIndex === -1) return;
+        
+        let newIndex = currentIndex + direction;
+        if (newIndex < 0) newIndex = this.channels.length - 1;
+        if (newIndex >= this.channels.length) newIndex = 0;
+        
+        this.loadChannel(this.channels[newIndex]);
+    }
+
+    selectChannelByNumber(number) {
+        const index = parseInt(number) - 1;
+        if (index >= 0 && index < this.channels.length) {
+            this.loadChannel(this.channels[index]);
+        }
+    }
+
+    showQualitySelector() {
+        const selector = document.getElementById('qualitySelector');
+        selector.style.display = selector.style.display === 'block' ? 'none' : 'block';
+    }
+
+    setQuality(quality) {
+        if (this.hls && this.hls.levels) {
+            const levels = this.hls.levels;
+            const level = levels.find(l => 
+                l.height >= (quality === '4k' ? 2160 : 
+                           quality === 'fhd' ? 1080 : 
+                           quality === 'hd' ? 720 : 480)
+            );
+            
+            if (level) {
+                this.hls.currentLevel = level.levelId;
+                this.showSuccess(`Qualité ${quality} activée`);
+            }
+        }
+        document.getElementById('qualitySelector').style.display = 'none';
+    }
+
+    showQualityOptions(qualities) {
+        const selector = document.getElementById('qualitySelector');
+        if (qualities.length > 1) {
+            selector.style.display = 'block';
+            setTimeout(() => {
+                selector.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    toggleAutoSubtitles() {
+        const enabled = this.autoSubtitles.toggle();
+        const btn = document.getElementById('subtitleBtn');
+        if (enabled) {
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="bi bi-subtitles"></i><span>ST On</span>';
+            this.showSuccess('Sous-titres automatiques activés');
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="bi bi-subtitles"></i><span>ST</span>';
+        }
+    }
+
+    rewind(seconds) {
+        this.timeShift.rewind(seconds);
+    }
+
+    fastForward(seconds) {
+        this.timeShift.fastForward(seconds);
+    }
+
+    addToFavorites() {
+        if (this.currentChannel) {
+            this.channelMemory.addToFavorites(this.currentChannel);
+            this.updateChannelInfo(this.currentChannel);
+            this.showSuccess('Ajouté aux favoris');
+        }
+    }
+
+    showFavorites() {
+        const favorites = this.channelMemory.getFavorites();
+        this.filterChannels('', favorites);
+    }
+
+    filterChannels(searchTerm, channelList = this.channels) {
+        const term = searchTerm.toLowerCase();
+        document.querySelectorAll('.channel-card').forEach((card, index) => {
+            const channel = channelList[index];
+            if (!channel) return;
+            
+            const matches = channel.name.toLowerCase().includes(term) ||
+                           (channel.group && channel.group.toLowerCase().includes(term));
+            
+            card.style.display = matches ? 'block' : 'none';
+        });
+    }
+
+    filterByGroup(group) {
+        const badges = document.querySelectorAll('.filter-badge');
+        badges.forEach(badge => badge.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (group === 'Tous') {
+            this.filterChannels('');
+            return;
+        }
+        
+        if (group === 'Favoris') {
+            this.showFavorites();
+            return;
+        }
+        
+        this.filterChannels(group);
+    }
+
+    clearFilter() {
+        document.getElementById('channelSearch').value = '';
+        this.filterChannels('');
+        document.querySelectorAll('.filter-badge').forEach(badge => {
+            badge.classList.remove('active');
+        });
+        document.querySelector('.filter-badge').classList.add('active');
+    }
+
+    sortChannels(criteria) {
+        if (criteria === 'name') {
+            this.channels.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (criteria === 'quality') {
+            this.channels.sort((a, b) => {
+                const qualityOrder = { '4K': 0, 'FHD': 1, 'HD': 2, 'SD': 3 };
+                const aQuality = a.quality || 'HD';
+                const bQuality = b.quality || 'HD';
+                return qualityOrder[aQuality] - qualityOrder[bQuality];
+            });
+        }
+        this.displayChannels();
+        this.showSuccess(`Trié par ${criteria === 'name' ? 'nom' : 'qualité'}`);
+    }
+
+    showEPGGrid() {
+        this.generateEPGGrid();
+        new bootstrap.Modal(document.getElementById('epgModal')).show();
+    }
+
+    generateEPGGrid() {
+        const grid = document.getElementById('epgGrid');
+        const channels = this.channels.slice(0, 15);
+        
+        let html = `<div class="epg-grid">`;
+        
+        // En-tête timeline
+        html += `<div class="epg-channel-header"><strong>Chaîne</strong></div>`;
+        for (let hour = 0; hour < 24; hour++) {
+            html += `<div class="epg-time-header">${hour.toString().padStart(2, '0')}:00</div>`;
+        }
+        
+        // Lignes des chaînes
+        channels.forEach(channel => {
+            html += `<div class="epg-channel-header">${channel.name}</div>`;
+            
+            for (let hour = 0; hour < 24; hour++) {
+                const hasProgram = Math.random() > 0.3;
+                if (hasProgram) {
+                    const programs = ['Film', 'Série', 'Info', 'Sport', 'Docu'];
+                    const program = programs[Math.floor(Math.random() * programs.length)];
+                    html += `<div class="epg-program" title="${program} à ${hour}:00">${program}</div>`;
+                } else {
+                    html += `<div style="background: transparent; border: 1px solid transparent;"></div>`;
+                }
+            }
+        });
+        
+        html += `</div>`;
+        grid.innerHTML = html;
+    }
+
+    setReminder() {
+        if (this.currentChannel) {
+            const program = document.getElementById('currentProgram').textContent;
+            this.epgManager.setReminder(this.currentChannel.name, program);
+            this.showSuccess('Rappel programmé');
+        }
+    }
+
+    toggleTokenDisplay() {
+        const token = this.tokenManager.getCurrentToken();
+        if (token) {
+            toastr.info(`Token: ${token.substring(0, 10)}...`, 'Token actuel');
+        } else {
+            toastr.warning('Aucun token actif', 'Token');
+        }
+    }
+
+    handleError(error) {
+        console.error('Player error:', error);
+        
+        // Gestion spécifique des erreurs token
+        if (error.message && error.message.includes('403') || error.message.includes('token')) {
+            this.tokenManager.invalidateToken();
+            this.showError('Token expiré, tentative de renouvellement...');
+            
+            // Recharger avec nouveau token
+            setTimeout(() => {
+                if (this.currentChannel) {
+                    this.reloadStream();
+                }
+            }, 2000);
+        } else {
+            this.showError('Erreur de lecture: ' + (error.code || 'inconnu'));
+        }
+    }
+}
+
+// Gestionnaire de Token
+class TokenManager {
+    constructor() {
+        this.currentToken = localStorage.getItem('iptv_token');
+        this.tokenExpiry = localStorage.getItem('iptv_token_expiry');
+    }
+    
+    async getValidToken() {
+        // Vérifier si le token actuel est encore valide
+        if (this.currentToken && this.tokenExpiry && Date.now() < parseInt(this.tokenExpiry)) {
+            return this.currentToken;
+        }
+        
+        // Générer un nouveau token
+        return await this.generateNewToken();
+    }
+    
+    async generateNewToken() {
+        try {
+            // Simuler une requête API pour obtenir un token
+            // Dans la réalité, cela appellerait votre backend
+            const newToken = this.generateRandomToken();
+            const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 heures
+            
+            this.currentToken = newToken;
+            this.tokenExpiry = expiryTime.toString();
+            
+            localStorage.setItem('iptv_token', newToken);
+            localStorage.setItem('iptv_token_expiry', expiryTime);
+            
+            console.log('Nouveau token généré:', newToken);
+            return newToken;
+            
+        } catch (error) {
+            console.error('Erreur de génération de token:', error);
+            return null;
+        }
+    }
+    
+    generateRandomToken() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let token = '';
+        for (let i = 0; i < 32; i++) {
+            token += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return token;
+    }
+    
+    invalidateToken() {
+        this.currentToken = null;
+        this.tokenExpiry = null;
+        localStorage.removeItem('iptv_token');
+        localStorage.removeItem('iptv_token_expiry');
+    }
+    
+    getCurrentToken() {
+        return this.currentToken;
+    }
+}
+
+// Gestionnaire EPG intelligent
+class EPGManager {
+    constructor() {
+        this.epgCache = {};
+        this.reminders = JSON.parse(localStorage.getItem('iptv_reminders') || '[]');
+    }
+    
+    async getEPGForChannel(channelName) {
+        const cacheKey = channelName.toLowerCase();
+        
+        // Vérifier le cache
+        if (this.epgCache[cacheKey] && Date.now() - this.epgCache[cacheKey].timestamp < 300000) {
+            return this.epgCache[cacheKey].data;
+        }
+        
+        // Générer des données EPG simulées
+        const epgData = this.generateEPGData(channelName);
+        this.epgCache[cacheKey] = {
+            data: epgData,
+            timestamp: Date.now()
+        };
+        
+        return epgData;
+    }
+    
+    generateEPGData(channelName) {
+        const now = new Date();
+        const hour = now.getHours();
+        
+        const categories = {
+            'tf1': ['Journal', 'Série', 'Film', 'Divertissement'],
+            'france 2': ['Info', 'Documentaire', 'Culture', 'Débat'],
+            'm6': ['Reality', 'Magazine', 'Série', 'Téléréalité'],
+            'cnews': ['Info Continue', 'Débat', 'Interview', 'Reportage'],
+            'bein': ['Football', 'Rugby', 'Tennis', 'Basket'],
+            'canal': ['Film', 'Série', 'Sport', 'Documentaire']
+        };
+        
+        let programs = ['Actualités', 'Film', 'Série', 'Documentaire', 'Sport', 'Divertissement'];
+        
+        // Trouver la catégorie basée sur le nom de la chaîne
+        for (const [key, catPrograms] of Object.entries(categories)) {
+            if (channelName.toLowerCase().includes(key)) {
+                programs = catPrograms;
+                break;
+            }
+        }
+        
+        const currentProgram = programs[hour % programs.length];
+        const nextProgram = programs[(hour + 1) % programs.length];
+        
+        return {
+            current: {
+                title: currentProgram,
+                start: new Date(now.getTime() - 30 * 60000).toISOString(),
+                end: new Date(now.getTime() + 30 * 60000).toISOString(),
+                progress: Math.floor(Math.random() * 100)
+            },
+            next: {
+                title: nextProgram,
+                start: new Date(now.getTime() + 30 * 60000).toISOString()
+            }
+        };
+    }
+    
+    setReminder(channelName, program) {
+        const reminder = {
+            id: 'rem_' + Date.now(),
+            channel: channelName,
+            program: program,
+            time: new Date().toISOString(),
+            alertTime: new Date(Date.now() + 30 * 60000).getTime() // 30 minutes
+        };
+        
+        this.reminders.push(reminder);
+        localStorage.setItem('iptv_reminders', JSON.stringify(this.reminders));
+        
+        // Planifier l'alerte
+        setTimeout(() => {
+            this.triggerReminder(reminder);
+        }, 30 * 60000);
+    }
+    
+    triggerReminder(reminder) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(`🎬 ${reminder.program}`, {
+                body: `Commence maintenant sur ${reminder.channel}`,
+                icon: 'https://img.icons8.com/color/96/000000/tv.png'
+            });
+        }
+        
+        toastr.info(`${reminder.program} sur ${reminder.channel}`, 'Rappel programme');
+    }
+    
+    startAutoUpdate() {
+        setInterval(() => {
+            this.checkReminders();
+        }, 60000); // Toutes les minutes
+    }
+    
+    checkReminders() {
+        const now = Date.now();
+        this.reminders = this.reminders.filter(reminder => {
+            if (now >= reminder.alertTime) {
+                this.triggerReminder(reminder);
+                return false;
+            }
+            return true;
+        });
+        
+        localStorage.setItem('iptv_reminders', JSON.stringify(this.reminders));
+    }
+}
+
+// Détecteur de qualité intelligent
+class QualityDetector {
+    constructor() {
+        this.qualities = [];
+        this.currentQuality = 'auto';
+    }
+    
+    detectFromURL(url) {
+        const urlLower = url.toLowerCase();
+        
+        if (urlLower.includes('4k') || urlLower.includes('2160')) return '4K';
+        if (urlLower.includes('fhd') || urlLower.includes('1080')) return 'FHD';
+        if (urlLower.includes('hd') || urlLower.includes('720')) return 'HD';
+        if (urlLower.includes('sd') || urlLower.includes('480')) return 'SD';
+        
+        return 'HD';
+    }
+    
+    detectFromManifest(manifestData) {
+        const qualities = [];
+        
+        if (manifestData.levels) {
+            manifestData.levels.forEach(level => {
+                if (level.height >= 2160) qualities.push('4K');
+                else if (level.height >= 1080) qualities.push('FHD');
+                else if (level.height >= 720) qualities.push('HD');
+                else qualities.push('SD');
+            });
+        }
+        
+        return [...new Set(qualities)];
+    }
+    
+    autoSwitchBasedOnBandwidth() {
+        if (!navigator.connection) return;
+        
+        const connection = navigator.connection;
+        const downlink = connection.downlink;
+        
+        let recommended = 'SD';
+        
+        if (downlink > 15) recommended = '4K';
+        else if (downlink > 8) recommended = 'FHD';
+        else if (downlink > 4) recommended = 'HD';
+        else if (downlink > 2) recommended = 'SD';
+        
+        if (this.currentQuality !== recommended && this.qualities.includes(recommended)) {
+            this.currentQuality = recommended;
+            player.setQuality(recommended.toLowerCase());
+        }
+    }
+    
+    monitorNetwork() {
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', () => {
+                this.autoSwitchBasedOnBandwidth();
+            });
+        }
+        
+        setInterval(() => this.autoSwitchBasedOnBandwidth(), 30000);
+    }
+}
+
+// Moteur de recommandations
+class RecommendationEngine {
+    constructor() {
+        this.viewingHistory = JSON.parse(localStorage.getItem('viewing_history') || '[]');
+        this.recommendations = [];
+    }
+    
+    init() {
+        this.updateRecommendations();
+        setInterval(() => this.updateRecommendations(), 300000); // Toutes les 5 minutes
+    }
+    
+    updateRecommendations() {
+        const patterns = this.analyzeViewingPatterns();
+        const recommendations = this.generateRecommendations(player.channels, patterns);
+        this.recommendations = recommendations;
+        this.displayRecommendations();
+    }
+    
+    analyzeViewingPatterns() {
+        const categoryCount = {};
+        const timePatterns = {};
+        
+        this.viewingHistory.forEach(session => {
+            if (session.category) {
+                categoryCount[session.category] = (categoryCount[session.category] || 0) + 1;
+            }
+            
+            const hour = new Date(session.timestamp).getHours();
+            const key = `${session.category}_${hour}`;
+            timePatterns[key] = (timePatterns[key] || 0) + 1;
+        });
+        
+        return { categoryCount, timePatterns };
+    }
+    
+    generateRecommendations(channels, patterns) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const recommendations = [];
+        
+        channels.forEach(channel => {
+            let score = 0;
+            
+            // Score par catégorie
+            if (channel.group && patterns.categoryCount[channel.group]) {
+                score += patterns.categoryCount[channel.group] * 10;
+            }
+            
+            // Score par heure
+            if (channel.group && patterns.timePatterns[`${channel.group}_${currentHour}`]) {
+                score += patterns.timePatterns[`${channel.group}_${currentHour}`] * 15;
+            }
+            
+            // Score par qualité
+            if (channel.quality === 'FHD' || channel.quality === '4K') {
+                score += 5;
+            }
+            
+            // Bonus pour chaînes récentes
+            const lastWatched = this.viewingHistory.find(h => h.channel === channel.name);
+            if (lastWatched) {
+                const hoursSince = (Date.now() - new Date(lastWatched.timestamp).getTime()) / 3600000;
+                if (hoursSince < 24) {
+                    score += 20;
+                }
+            }
+            
+            if (score > 0 && channel !== player.currentChannel) {
+                recommendations.push({ channel, score });
+            }
+        });
+        
+        return recommendations
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4)
+            .map(r => r.channel);
+    }
+    
+    displayRecommendations() {
+        const container = document.getElementById('recommendationsContainer');
+        const list = document.getElementById('recommendationsList');
+        
+        if (this.recommendations.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        list.innerHTML = '';
+        
+        this.recommendations.forEach(channel => {
+            const col = document.createElement('div');
+            col.className = 'col-6 col-md-3';
+            
+            col.innerHTML = `
+                <div class="channel-card recommended" 
+                     onclick="player.loadChannel(player.channels.find(c => c.id === '${channel.id}'))">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <strong>${channel.name}</strong>
+                        <span class="badge bg-warning">⭐</span>
+                    </div>
+                    <small class="text-muted">${channel.group || 'Général'}</small>
+                    <small class="text-primary d-block mt-1">Recommandé</small>
+                </div>
+            `;
+            
+            list.appendChild(col);
+        });
+        
+        container.style.display = 'block';
+    }
+    
+    isRecommended(channel) {
+        return this.recommendations.some(rec => rec.id === channel.id);
+    }
+}
+
+// Mémoire des chaînes
+class ChannelMemory {
+    constructor() {
+        this.favorites = JSON.parse(localStorage.getItem('channel_favorites') || '[]');
+        this.history = JSON.parse(localStorage.getItem('channel_history') || '[]');
+        this.watchTime = JSON.parse(localStorage.getItem('watch_time') || '{}');
+    }
+    
+    recordView(channel, duration) {
+        const entry = {
+            channel: channel.name,
+            category: channel.group,
+            timestamp: new Date().toISOString(),
+            duration: duration
+        };
+        
+        this.history.unshift(entry);
+        
+        // Limiter l'historique
+        if (this.history.length > 100) {
+            this.history.pop();
+        }
+        
+        // Enregistrer le temps de visionnage
+        const channelKey = channel.id || channel.name;
+        this.watchTime[channelKey] = (this.watchTime[channelKey] || 0) + duration;
+        
+        this.save();
+    }
+    
+    addToFavorites(channel) {
+        if (!this.isFavorite(channel)) {
+            this.favorites.push({
+                id: channel.id || channel.name,
+                name: channel.name,
+                added: new Date().toISOString()
+            });
+            this.save();
+        }
+    }
+    
+    isFavorite(channel) {
+        return this.favorites.some(fav => fav.id === (channel.id || channel.name));
+    }
+    
+    getFavorites() {
+        return this.favorites.map(fav => 
+            player.channels.find(c => c.id === fav.id || c.name === fav.name)
+        ).filter(Boolean);
+    }
+    
+    autoAddToFavorites(channel) {
+        const channelKey = channel.id || channel.name;
+        const totalWatchTime = this.watchTime[channelKey] || 0;
+        
+        if (totalWatchTime > 1800 && !this.isFavorite(channel)) {
+            this.addToFavorites(channel);
+            player.showSuccess(`${channel.name} ajouté aux favoris automatiquement`);
+        }
+    }
+    
+    save() {
+        localStorage.setItem('channel_favorites', JSON.stringify(this.favorites));
+        localStorage.setItem('channel_history', JSON.stringify(this.history));
+        localStorage.setItem('watch_time', JSON.stringify(this.watchTime));
+    }
+}
+
+// Sous-titres automatiques
+class AutoSubtitles {
+    constructor() {
+        this.enabled = false;
+        this.recognition = null;
+        this.subtitles = [];
+    }
+    
+    toggle() {
+        this.enabled = !this.enabled;
+        
+        if (this.enabled && 'webkitSpeechRecognition' in window) {
+            this.initRecognition();
+        } else if (this.recognition) {
+            this.recognition.stop();
+        }
+        
+        return this.enabled;
+    }
+    
+    initRecognition() {
+        this.recognition = new webkitSpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.lang = 'fr-FR';
+        
+        this.recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    transcript += event.results[i][0].transcript;
+                }
+            }
+            
+            if (transcript) {
+                this.addSubtitle(transcript);
+            }
+        };
+        
+        this.recognition.start();
+    }
+    
+    addSubtitle(text) {
+        const display = document.getElementById('subtitleDisplay');
+        display.textContent = text;
+        display.style.display = 'block';
+        
+        setTimeout(() => {
+            display.style.display = 'none';
+        }, 3000);
+    }
+    
+    startIfEnabled() {
+        if (this.enabled && this.recognition) {
+            this.recognition.start();
+        }
+    }
+}
+
+// Timeshift
+class TimeShift {
+    constructor() {
+        this.buffer = new Map();
+        this.isRecording = false;
+    }
+    
+    startRecording(channel) {
+        this.isRecording = true;
+        this.currentChannel = channel;
+        
+        setInterval(() => {
+            if (player.player && !player.player.paused()) {
+                const currentTime = player.player.currentTime();
+                this.buffer.set(Date.now(), currentTime);
+                
+                // Limiter le buffer à 5 minutes
+                const bufferKeys = Array.from(this.buffer.keys());
+                if (bufferKeys.length > 300) {
+                    this.buffer.delete(bufferKeys[0]);
+                }
+            }
+        }, 1000);
+    }
+    
+    rewind(seconds) {
+        if (player.player) {
+            const currentTime = player.player.currentTime();
+            const newTime = Math.max(0, currentTime - seconds);
+            player.player.currentTime(newTime);
+            
+            toastr.info(`Retour de ${seconds} secondes`, 'Timeshift');
+        }
+    }
+    
+    fastForward(seconds) {
+        if (player.player) {
+            const currentTime = player.player.currentTime();
+            const duration = player.player.duration();
+            const newTime = Math.min(duration, currentTime + seconds);
+            player.player.currentTime(newTime);
+            
+            toastr.info(`Avance de ${seconds} secondes`, 'Timeshift');
+        }
+    }
 }
 
 // Initialisation globale
 let player = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Demander la permission pour les notifications
+    if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+    
     player = new IPTVPlayer();
     
     // Exposer méthodes globales
@@ -824,4 +2014,4 @@ window.addEventListener('beforeunload', () => {
 });
 </script>
 </body>
-        </html>
+    </html>
