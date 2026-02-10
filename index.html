@@ -1,1383 +1,649 @@
 <!DOCTYPE html>
 <html lang="fr" data-bs-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ Lecteur IPTV Simple</title>
-
-<!-- Bootstrap 5 Dark Theme -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-
-<!-- Video.js -->
-<link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
-
-<!-- EPG Styles -->
-<style>
-:root {
-    --primary: #0ea5e9;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --dark-bg: #0f172a;
-    --card-bg: #1e293b;
-}
-
-body { 
-    background: var(--dark-bg); 
-    color: #e2e8f0; 
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* Player Container */
-.player-container { 
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    background: #000;
-}
-
-/* Overlay pour infos */
-.info-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-    z-index: 1001;
-    pointer-events: none;
-}
-
-/* Channel info */
-.channel-info {
-    background: rgba(30, 41, 59, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 15px;
-    border-left: 4px solid var(--primary);
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-/* EPG Container */
-.epg-container {
-    position: absolute;
-    bottom: 80px;
-    left: 20px;
-    right: 20px;
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(15px);
-    border-radius: 12px;
-    padding: 20px;
-    z-index: 1001;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    max-height: 40vh;
-    overflow-y: auto;
-    display: none;
-}
-
-.epg-container.active {
-    display: block;
-    animation: fadeInUp 0.3s ease;
-}
-
-@keyframes fadeInUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-/* EPG Timeline */
-.epg-timeline {
-    display: flex;
-    margin: 15px 0;
-    position: relative;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.epg-current-time {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary), #3b82f6);
-    border-radius: 3px;
-    width: 50%;
-}
-
-.epg-time-marker {
-    position: absolute;
-    top: 10px;
-    transform: translateX(-50%);
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* Programme items */
-.epg-program {
-    padding: 12px;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border-left: 3px solid transparent;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.epg-program.current {
-    background: rgba(14, 165, 233, 0.15);
-    border-left-color: var(--primary);
-}
-
-.epg-program.next {
-    background: rgba(245, 158, 11, 0.1);
-    border-left-color: var(--warning);
-}
-
-.epg-program:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.epg-time {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    font-family: monospace;
-}
-
-.epg-title {
-    font-weight: 600;
-    margin: 5px 0;
-}
-
-.epg-desc {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.4;
-}
-
-.epg-category {
-    display: inline-block;
-    padding: 3px 8px;
-    background: rgba(14, 165, 233, 0.2);
-    color: var(--primary);
-    border-radius: 4px;
-    font-size: 11px;
-    margin-top: 5px;
-}
-
-/* Controls */
-.controls-container {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-    padding: 20px;
-    z-index: 1001;
-}
-
-.controls-bar {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.control-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 18px;
-    backdrop-filter: blur(10px);
-}
-
-.control-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
-}
-
-.control-btn.active {
-    background: var(--primary);
-    color: white;
-}
-
-.control-btn.epg-btn {
-    background: rgba(245, 158, 11, 0.2);
-    color: var(--warning);
-}
-
-.control-btn.epg-btn.active {
-    background: var(--warning);
-    color: white;
-}
-
-/* Volume slider */
-.volume-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 8px 15px;
-    border-radius: 25px;
-    backdrop-filter: blur(10px);
-}
-
-.volume-slider {
-    width: 100px;
-    height: 4px;
-    -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    outline: none;
-}
-
-.volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    background: var(--primary);
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-/* Status */
-.status-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1002;
-    display: none;
-    backdrop-filter: blur(5px);
-}
-
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Error */
-.error-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1003;
-    display: none;
-    text-align: center;
-    padding: 20px;
-}
-
-.error-icon {
-    font-size: 60px;
-    color: var(--danger);
-    margin-bottom: 20px;
-}
-
-/* EPG Sources Selector */
-.epg-sources {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1001;
-    background: rgba(30, 41, 59, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 8px;
-    padding: 10px;
-    display: none;
-}
-
-.epg-source-btn {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: white;
-    text-align: left;
-    border-radius: 4px;
-    cursor: pointer;
-    margin: 2px 0;
-    transition: all 0.3s ease;
-}
-
-.epg-source-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.epg-source-btn.active {
-    background: var(--primary);
-    color: white;
-}
-
-/* Quality Selector */
-.quality-selector {
-    position: absolute;
-    bottom: 100px;
-    right: 20px;
-    background: rgba(30, 41, 59, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 8px;
-    padding: 10px;
-    display: none;
-    z-index: 1001;
-}
-
-/* Mobile optimizations */
-@media (max-width: 768px) {
-    .epg-container {
-        left: 10px;
-        right: 10px;
-        bottom: 70px;
-        padding: 15px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecteur IPTV Pro</title>
     
-    .channel-info {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
+    <!-- Bootstrap 5 Dark Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
-    .control-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 16px;
-    }
+    <!-- Video.js -->
+    <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
     
-    .volume-container {
-        padding: 6px 12px;
-    }
-    
-    .volume-slider {
-        width: 80px;
-    }
-    
-    .epg-sources, .quality-selector {
-        top: 10px;
-        right: 10px;
-    }
-}
-
-/* Hide video.js controls when not active */
-.video-js .vjs-control-bar {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.video-js:hover .vjs-control-bar {
-    opacity: 1;
-}
-
-/* Custom video.js theme */
-.video-js .vjs-big-play-button {
-    background: var(--primary);
-    border: none;
-    width: 80px;
-    height: 80px;
-    border-radius: 40px;
-    line-height: 80px;
-    font-size: 30px;
-}
-
-.video-js .vjs-control-bar {
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-    height: 60px;
-}
-
-.video-js .vjs-progress-control {
-    height: 4px;
-}
-
-.video-js .vjs-play-progress {
-    background: var(--primary);
-}
-
-/* Notification */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(10px);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    border-left: 4px solid var(--primary);
-    z-index: 2000;
-    display: none;
-    animation: slideInRight 0.3s ease;
-    max-width: 300px;
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-</style>
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        
+        /* Player container */
+        .player-wrapper {
+            width: 100%;
+            height: 70vh;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+        
+        /* Info overlay */
+        .channel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+            z-index: 10;
+        }
+        
+        /* EPG sidebar */
+        .epg-sidebar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            height: 70vh;
+            overflow-y: auto;
+            display: none; /* Caché par défaut */
+        }
+        
+        .epg-sidebar.active {
+            display: block;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Programme EPG */
+        .epg-program {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .epg-program.current {
+            background: rgba(13, 110, 253, 0.15);
+            border-left-color: var(--primary);
+        }
+        
+        .epg-program:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Badges qualité */
+        .badge-quality {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-hd { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+        .badge-fhd { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+        .badge-4k { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .badge-live { background: linear-gradient(135deg, #ff9f43, #ee5253); }
+        
+        /* Controls bar */
+        .controls-bar {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .player-wrapper, .epg-sidebar {
+                height: 50vh;
+            }
+            .controls-bar {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<!-- Player Container -->
-<div class="player-container" id="playerContainer">
-    <!-- Video Player -->
-    <video id="video-player" class="video-js vjs-fluid" controls preload="auto" playsinline>
-        <p class="vjs-no-js">JavaScript est requis pour ce lecteur.</p>
-    </video>
-    
-    <!-- Info Overlay -->
-    <div class="info-overlay">
-        <div class="channel-info">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 id="currentChannelName" class="mb-1">Chargement...</h4>
-                    <div class="d-flex align-items-center gap-2">
-                        <span id="currentQuality" class="badge bg-primary">HD</span>
-                        <span id="liveIndicator" class="badge bg-danger d-none">LIVE</span>
-                        <span id="tokenStatus" class="badge bg-warning d-none">Token</span>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Player Section -->
+            <div class="col-lg-8 col-md-12 mb-4">
+                <div class="player-wrapper">
+                    <!-- Info overlay -->
+                    <div class="channel-overlay">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 id="channelName" class="mb-1">Chargement...</h3>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span id="qualityBadge" class="badge-quality badge-hd">HD</span>
+                                    <span id="liveBadge" class="badge-quality badge-live d-none">
+                                        <i class="bi bi-circle-fill me-1"></i> LIVE
+                                    </span>
+                                    <small id="epgSource" class="text-muted">EPG: Chargement...</small>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-light" id="epgToggleBtn">
+                                    <i class="bi bi-tv me-1"></i> Programme
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Player -->
+                    <video id="video-player" class="video-js vjs-fluid" controls preload="auto">
+                        <p class="vjs-no-js">JavaScript est requis pour ce lecteur.</p>
+                    </video>
+                </div>
+                
+                <!-- Controls -->
+                <div class="controls-bar">
+                    <div class="d-flex flex-wrap gap-3 justify-content-center align-items-center">
+                        <button class="btn btn-outline-light" onclick="player.togglePlay()" id="playBtn">
+                            <i class="bi bi-pause-fill"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="player.toggleMute()" id="muteBtn">
+                            <i class="bi bi-volume-up-fill"></i>
+                        </button>
+                        <input type="range" class="form-range" style="width: 100px;" min="0" max="100" 
+                               value="50" oninput="player.updateVolume(this.value)">
+                        <button class="btn btn-outline-light" onclick="player.toggleFullscreen()">
+                            <i class="bi bi-fullscreen"></i>
+                        </button>
+                        <select class="form-select form-select-sm bg-dark text-light" style="width: auto;" 
+                                onchange="player.changeQuality(this.value)">
+                            <option value="auto">Qualité Auto</option>
+                            <option value="1080">1080p</option>
+                            <option value="720">720p</option>
+                            <option value="480">480p</option>
+                        </select>
+                        <button class="btn btn-outline-warning" onclick="player.reloadEPG()">
+                            <i class="bi bi-arrow-clockwise"></i> Actualiser EPG
+                        </button>
                     </div>
                 </div>
-                <div id="epgSourceInfo" class="text-muted small"></div>
             </div>
-        </div>
-    </div>
-    
-    <!-- EPG Container -->
-    <div class="epg-container" id="epgContainer">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">
-                <i class="bi bi-tv me-2"></i>
-                <span id="epgChannelName">Programme TV</span>
-            </h5>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" onclick="player.changeEPGDate(-1)">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <span id="epgCurrentDate" class="btn btn-sm btn-outline-secondary">Aujourd'hui</span>
-                <button class="btn btn-sm btn-outline-primary" onclick="player.changeEPGDate(1)">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-warning" onclick="player.toggleEPGSources()">
-                    <i class="bi bi-database"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div id="epgContent">
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Chargement EPG...</span>
+            
+            <!-- EPG Sidebar -->
+            <div class="col-lg-4 col-md-12">
+                <div class="epg-sidebar" id="epgSidebar">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-tv me-2"></i>
+                            <span id="epgChannelTitle">Programme TV</span>
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="player.changeEPGDate(-1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <span class="btn btn-sm btn-outline-secondary mx-2" id="epgDate">Aujourd'hui</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="player.changeEPGDate(1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="epgContent" class="mb-3">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Chargement du programme...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center small text-muted mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <span id="epgStatus">Recherche des informations de programme...</span>
+                    </div>
                 </div>
-                <p class="mt-2">Chargement du programme...</p>
             </div>
         </div>
-        
-        <div class="epg-timeline" id="epgTimeline">
-            <div class="epg-current-time" id="epgCurrentTime"></div>
-        </div>
-        
-        <div class="text-center mt-3">
-            <small class="text-muted" id="epgSourceName">Source: Chargement...</small>
-        </div>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
-    <!-- EPG Sources -->
-    <div class="epg-sources" id="epgSources">
-        <h6 class="mb-2">Sources EPG</h6>
-        <div id="epgSourcesList">
-            <!-- Sources will be loaded here -->
-        </div>
-    </div>
-    
-    <!-- Controls -->
-    <div class="controls-container">
-        <div class="controls-bar">
-            <button class="control-btn" onclick="player.togglePlay()" id="playBtn">
-                <i class="bi bi-pause-fill"></i>
-            </button>
-            <button class="control-btn" onclick="player.toggleMute()" id="muteBtn">
-                <i class="bi bi-volume-up-fill"></i>
-            </button>
+    <script>
+    class SimpleIPTVPlayer {
+        constructor() {
+            this.player = null;
+            this.hls = null;
+            this.currentChannel = null;
+            this.epgData = null;
+            this.currentEPGDate = new Date();
+            this.epgVisible = false;
             
-            <div class="volume-container">
-                <i class="bi bi-volume-down"></i>
-                <input type="range" id="volumeSlider" class="volume-slider" 
-                       min="0" max="100" value="50" oninput="player.updateVolume(this.value)">
-            </div>
+            // Sources EPG externes (priorité)
+            this.epgSources = [
+                'https://xmltv.fr/xmltv/xmltv-tnt.xml',
+                'https://iptv-org.github.io/epg/guides/fr.xml',
+                'https://raw.githubusercontent.com/iptv-org/epg/master/guides/fr.xml'
+            ];
             
-            <button class="control-btn" onclick="player.toggleFullscreen()">
-                <i class="bi bi-fullscreen"></i>
-            </button>
-            
-            <button class="control-btn epg-btn" onclick="player.toggleEPG()" id="epgBtn">
-                <i class="bi bi-tv"></i>
-            </button>
-            
-            <button class="control-btn" onclick="player.toggleQualitySelector()">
-                <i class="bi bi-hd"></i>
-            </button>
-            
-            <button class="control-btn" onclick="player.reloadStream()">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
-        </div>
-    </div>
-    
-    <!-- Quality Selector -->
-    <div class="quality-selector" id="qualitySelector">
-        <h6 class="mb-2">Qualité</h6>
-        <button class="epg-source-btn" onclick="player.setQuality('auto')">Auto</button>
-        <button class="epg-source-btn" onclick="player.setQuality('1080p')">1080p</button>
-        <button class="epg-source-btn" onclick="player.setQuality('720p')">720p</button>
-        <button class="epg-source-btn" onclick="player.setQuality('480p')">480p</button>
-    </div>
-    
-    <!-- Status Overlay -->
-    <div class="status-overlay" id="statusOverlay">
-        <div class="loading-spinner"></div>
-        <div id="statusText" class="mt-3">Chargement du flux...</div>
-    </div>
-    
-    <!-- Error Overlay -->
-    <div class="error-overlay" id="errorOverlay">
-        <div class="error-icon">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-        </div>
-        <h4 id="errorTitle">Erreur</h4>
-        <p id="errorMessage" class="mb-4">Une erreur est survenue lors du chargement</p>
-        <button class="btn btn-primary" onclick="player.reloadStream()">
-            <i class="bi bi-arrow-clockwise me-2"></i>Réessayer
-        </button>
-    </div>
-</div>
-
-<!-- Notification -->
-<div class="notification" id="notification">
-    <div id="notificationContent"></div>
-</div>
-
-<!-- Scripts -->
-<script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-class IPTVPlayer {
-    constructor() {
-        this.player = null;
-        this.hls = null;
-        this.currentChannel = null;
-        this.epgData = null;
-        this.epgActive = false;
-        this.currentEPGDate = new Date();
-        
-        // Sources EPG réelles
-        this.epgSources = [
-            {
-                id: 'xmltv',
-                name: 'XMLTV.fr',
-                url: 'https://xmltv.fr/xmltv/xmltv-tnt.xml',
-                type: 'xmltv',
-                active: true
-            },
-            {
-                id: 'iptv-org',
-                name: 'IPTV-org EPG',
-                url: 'https://iptv-org.github.io/epg/guides/fr.xml',
-                type: 'xmltv',
-                active: false
-            },
-            {
-                id: 'm3u4u',
-                name: 'M3U4U.com',
-                url: 'https://m3u4u.com/epg',
-                type: 'm3u4u',
-                active: false
-            },
-            {
-                id: 'epgshare',
-                name: 'EPGShare',
-                url: 'https://epgshare01.online/epgshare',
-                type: 'epgshare',
-                active: false
-            }
-        ];
-        
-        this.init();
-    }
-
-    init() {
-        this.setupPlayer();
-        this.loadChannelFromURL();
-        this.setupEventListeners();
-        this.loadEPGSources();
-    }
-
-    setupPlayer() {
-        this.player = videojs('video-player', {
-            fluid: true,
-            autoplay: true,
-            controls: true,
-            responsive: true,
-            html5: {
-                vhs: {
-                    overrideNative: true
-                }
-            },
-            playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
-            userActions: {
-                doubleClick: true,
-                hotkeys: true
-            }
-        });
-
-        this.player.on('waiting', () => this.showStatus('Buffering...'));
-        this.player.on('playing', () => this.hideStatus());
-        this.player.on('error', (e) => this.handleError(e));
-        this.player.on('loadedmetadata', () => this.onLoadedMetadata());
-    }
-
-    loadChannelFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const src = params.get('src');
-        const name = params.get('name') || 'Chaîne IPTV';
-        
-        if (src) {
-            this.currentChannel = {
-                name: decodeURIComponent(name),
-                url: src,
-                quality: this.detectQualityFromURL(src)
-            };
-            
-            this.updateChannelInfo();
-            this.loadStream(src);
-            this.loadEPGForChannel(this.currentChannel.name);
-        } else {
-            this.showError('Aucune source spécifiée', 'Ajoutez ?src=URL à l\'URL');
+            this.init();
         }
-    }
-
-    detectQualityFromURL(url) {
-        const urlLower = url.toLowerCase();
-        if (urlLower.includes('4k') || urlLower.includes('2160')) return '4K';
-        if (urlLower.includes('1080')) return 'FHD';
-        if (urlLower.includes('720')) return 'HD';
-        if (urlLower.includes('480')) return 'SD';
-        return 'HD';
-    }
-
-    async loadStream(url) {
-        try {
-            this.showStatus('Chargement du flux...');
+        
+        init() {
+            this.setupPlayer();
+            this.loadFromURL();
+            this.setupControls();
+        }
+        
+        setupPlayer() {
+            this.player = videojs('video-player', {
+                fluid: true,
+                autoplay: true,
+                controls: true,
+                responsive: true,
+                html5: {
+                    vhs: {
+                        overrideNative: true
+                    }
+                }
+            });
             
-            // Nettoyer ancien HLS
+            this.player.on('error', (e) => {
+                console.error('Player error:', e);
+                this.showError();
+            });
+            
+            this.player.on('loadedmetadata', () => {
+                this.updateQualityBadge();
+            });
+        }
+        
+        loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Support multiple URL formats
+            let channelURL = params.get('src') || 
+                            params.get('url') || 
+                            this.extractFromChannelsParam(params.get('channels'));
+            
+            let channelName = params.get('name') || 'Chaîne IPTV';
+            
+            if (channelURL) {
+                this.currentChannel = {
+                    name: decodeURIComponent(channelName),
+                    url: channelURL,
+                    quality: this.detectQuality(channelURL)
+                };
+                
+                this.updateUI();
+                this.loadStream(channelURL);
+                this.loadEPG(channelName);
+            } else {
+                document.getElementById('channelName').textContent = '⚠️ Aucune source';
+                document.getElementById('channelName').innerHTML += 
+                    '<br><small class="text-warning">Ajoutez ?src=URL à l\'URL</small>';
+            }
+        }
+        
+        extractFromChannelsParam(channelsParam) {
+            if (!channelsParam) return null;
+            try {
+                const channels = JSON.parse(decodeURIComponent(channelsParam));
+                if (channels && channels.length > 0) {
+                    return channels[0].url;
+                }
+            } catch (e) {
+                console.warn('Failed to parse channels param:', e);
+            }
+            return null;
+        }
+        
+        detectQuality(url) {
+            const urlLower = url.toLowerCase();
+            if (urlLower.includes('4k') || urlLower.includes('2160')) return '4K';
+            if (urlLower.includes('1080') || urlLower.includes('fhd')) return 'FHD';
+            if (urlLower.includes('720') || urlLower.includes('hd')) return 'HD';
+            return 'SD';
+        }
+        
+        loadStream(url) {
             if (this.hls) {
                 this.hls.destroy();
             }
             
-            // Détecter le type de stream
-            if (url.toLowerCase().includes('.m3u8')) {
-                await this.loadHLS(url);
-            } else {
-                await this.loadNative(url);
-            }
-            
-            this.hideStatus();
-            this.showNotification('Flux chargé avec succès');
-            
-        } catch (error) {
-            this.showError('Erreur de chargement', error.message);
-        }
-    }
-
-    loadHLS(url) {
-        return new Promise((resolve, reject) => {
-            if (Hls.isSupported()) {
+            if (url.includes('.m3u8') && Hls.isSupported()) {
                 this.hls = new Hls({
                     enableWorker: true,
-                    lowLatencyMode: true,
-                    backBufferLength: 90
+                    lowLatencyMode: true
                 });
                 
                 this.hls.loadSource(url);
                 this.hls.attachMedia(this.player.tech().el());
                 
                 this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    this.player.play().then(resolve).catch(reject);
+                    this.player.play();
                 });
-                
-                this.hls.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        reject(new Error(`Erreur HLS: ${data.details}`));
-                    }
-                });
-                
-            } else if (this.player.canPlayType('application/vnd.apple.mpegurl')) {
-                this.player.src({ src: url, type: 'application/x-mpegURL' });
-                this.player.play().then(resolve).catch(reject);
             } else {
-                reject(new Error('HLS non supporté par votre navigateur'));
+                this.player.src({ src: url, type: 'video/mp4' });
+                this.player.play();
             }
-        });
-    }
-
-    loadNative(url) {
-        return new Promise((resolve, reject) => {
-            this.player.src({ src: url, type: 'video/mp4' });
-            this.player.play().then(resolve).catch(reject);
-        });
-    }
-
-    updateChannelInfo() {
-        if (!this.currentChannel) return;
-        
-        document.getElementById('currentChannelName').textContent = this.currentChannel.name;
-        
-        const qualityElement = document.getElementById('currentQuality');
-        qualityElement.textContent = this.currentChannel.quality;
-        
-        // Mettre à jour les classes de qualité
-        qualityElement.className = 'badge';
-        switch(this.currentChannel.quality) {
-            case '4K': qualityElement.classList.add('bg-danger'); break;
-            case 'FHD': qualityElement.classList.add('bg-warning'); break;
-            case 'HD': qualityElement.classList.add('bg-success'); break;
-            case 'SD': qualityElement.classList.add('bg-secondary'); break;
-            default: qualityElement.classList.add('bg-primary');
         }
         
-        // Vérifier si c'est un flux live
-        if (this.currentChannel.url.includes('.m3u8')) {
-            document.getElementById('liveIndicator').classList.remove('d-none');
+        updateUI() {
+            if (!this.currentChannel) return;
+            
+            // Mettre à jour le nom de la chaîne
+            document.getElementById('channelName').textContent = this.currentChannel.name;
+            
+            // Mettre à jour le badge de qualité
+            const badge = document.getElementById('qualityBadge');
+            badge.textContent = this.currentChannel.quality;
+            badge.className = 'badge-quality ';
+            
+            switch(this.currentChannel.quality) {
+                case '4K': badge.classList.add('badge-4k'); break;
+                case 'FHD': badge.classList.add('badge-fhd'); break;
+                case 'HD': badge.classList.add('badge-hd'); break;
+                default: badge.classList.add('badge-hd');
+            }
+            
+            // Afficher "LIVE" pour les streams HLS
+            if (this.currentChannel.url.includes('.m3u8')) {
+                document.getElementById('liveBadge').classList.remove('d-none');
+            }
         }
-    }
-
-    async loadEPGForChannel(channelName) {
-        try {
-            const epgContainer = document.getElementById('epgContent');
-            epgContainer.innerHTML = `
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Chargement EPG...</span>
-                    </div>
-                    <p class="mt-2">Recherche du programme...</p>
-                </div>
-            `;
+        
+        updateQualityBadge() {
+            if (!this.player) return;
             
-            document.getElementById('epgChannelName').textContent = channelName;
+            const height = this.player.videoHeight();
+            const badge = document.getElementById('qualityBadge');
             
-            // Essayer chaque source EPG
-            for (const source of this.epgSources) {
-                if (source.active) {
-                    const epgData = await this.fetchEPGFromSource(source, channelName);
+            if (height >= 2160) {
+                badge.textContent = '4K';
+                badge.className = 'badge-quality badge-4k';
+            } else if (height >= 1080) {
+                badge.textContent = 'FHD';
+                badge.className = 'badge-quality badge-fhd';
+            } else if (height >= 720) {
+                badge.textContent = 'HD';
+                badge.className = 'badge-quality badge-hd';
+            }
+        }
+        
+        async loadEPG(channelName) {
+            try {
+                document.getElementById('epgChannelTitle').textContent = channelName;
+                document.getElementById('epgStatus').textContent = 'Recherche EPG...';
+                
+                // Essayer chaque source EPG
+                for (const source of this.epgSources) {
+                    const epgData = await this.fetchEPG(source, channelName);
                     if (epgData && epgData.length > 0) {
                         this.epgData = epgData;
-                        this.displayEPG(epgData);
-                        document.getElementById('epgSourceName').textContent = `Source: ${source.name}`;
-                        document.getElementById('epgSourceInfo').innerHTML = 
-                            `<small><i class="bi bi-database me-1"></i>${source.name}</small>`;
+                        this.displayEPG();
+                        document.getElementById('epgSource').textContent = 'EPG: ' + 
+                            source.split('/').slice(-2, -1)[0] || 'Source externe';
+                        document.getElementById('epgStatus').textContent = 'EPG chargé avec succès';
                         return;
                     }
                 }
-            }
-            
-            // Si aucune source ne fonctionne
-            this.displayNoEPG();
-            
-        } catch (error) {
-            console.error('Erreur EPG:', error);
-            this.displayNoEPG();
-        }
-    }
-
-    async fetchEPGFromSource(source, channelName) {
-        try {
-            const response = await fetch(this.getProxyURL(source.url));
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const text = await response.text();
-            
-            if (source.type === 'xmltv') {
-                return this.parseXMLTV(text, channelName);
-            } else if (source.type === 'm3u4u') {
-                return this.parseM3U4U(text, channelName);
-            }
-            
-            return [];
-            
-        } catch (error) {
-            console.warn(`Source EPG ${source.name} échouée:`, error);
-            return null;
-        }
-    }
-
-    parseXMLTV(xmlContent, channelName) {
-        // Créer un parser XML
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
-        
-        // Chercher la chaîne par nom approximatif
-        const channelDisplayName = this.simplifyChannelName(channelName);
-        const programmes = [];
-        
-        // Trouver tous les programmes
-        const programmeElements = xmlDoc.getElementsByTagName('programme');
-        
-        for (let prog of programmeElements) {
-            const channelId = prog.getAttribute('channel');
-            const start = prog.getAttribute('start');
-            const stop = prog.getAttribute('stop');
-            
-            // Extraire les infos du programme
-            const titleElem = prog.getElementsByTagName('title')[0];
-            const descElem = prog.getElementsByTagName('desc')[0];
-            const categoryElem = prog.getElementsByTagName('category')[0];
-            
-            if (titleElem) {
-                const title = titleElem.textContent;
-                const desc = descElem ? descElem.textContent : '';
-                const category = categoryElem ? categoryElem.textContent : '';
                 
-                // Vérifier si c'est pour notre chaîne (par nom approximatif)
-                if (this.channelNameMatches(channelId, channelDisplayName)) {
+                // Si aucune source ne fonctionne
+                this.displayNoEPG();
+                
+            } catch (error) {
+                console.error('EPG Error:', error);
+                this.displayNoEPG();
+            }
+        }
+        
+        async fetchEPG(sourceUrl, channelName) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(sourceUrl)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                // Parser le XML
+                return this.parseEPGXML(data.contents, channelName);
+                
+            } catch (error) {
+                console.warn('EPG source failed:', sourceUrl, error);
+                return null;
+            }
+        }
+        
+        parseEPGXML(xmlContent, channelName) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+            const programmes = [];
+            const channelSearch = channelName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            // Chercher la chaîne et ses programmes
+            const programmeNodes = xmlDoc.getElementsByTagName('programme');
+            
+            for (let prog of programmeNodes) {
+                const titleElem = prog.getElementsByTagName('title')[0];
+                const descElem = prog.getElementsByTagName('desc')[0];
+                const start = prog.getAttribute('start');
+                
+                if (titleElem && start) {
+                    const title = titleElem.textContent;
+                    const desc = descElem ? descElem.textContent : '';
+                    
+                    // Parser la date XMLTV (YYYYMMDDHHMMSS +0000)
+                    const year = start.substring(0, 4);
+                    const month = start.substring(4, 6) - 1;
+                    const day = start.substring(6, 8);
+                    const hour = start.substring(8, 10);
+                    const minute = start.substring(10, 12);
+                    
+                    const startTime = new Date(year, month, day, hour, minute);
+                    
                     programmes.push({
-                        start: this.parseXMLTVTime(start),
-                        end: this.parseXMLTVTime(stop),
+                        start: startTime,
                         title: title,
                         description: desc,
-                        category: category,
-                        channel: channelId
+                        duration: '60 min' // Approximation
                     });
                 }
             }
+            
+            // Trier par heure et limiter à 10 programmes
+            programmes.sort((a, b) => a.start - b.start);
+            return programmes.slice(0, 10);
         }
         
-        // Trier par heure de début
-        programmes.sort((a, b) => a.start - b.start);
-        
-        return programmes;
-    }
-
-    simplifyChannelName(name) {
-        // Nettoyer le nom pour la correspondance
-        return name.toLowerCase()
-            .replace(/hd$|fhd$|4k$|sd$/gi, '')
-            .replace(/[^a-z0-9]/g, '')
-            .trim();
-    }
-
-    channelNameMatches(channelId, displayName) {
-        const channelIdSimple = this.simplifyChannelName(channelId);
-        return channelIdSimple.includes(displayName) || displayName.includes(channelIdSimple);
-    }
-
-    parseXMLTVTime(timeStr) {
-        // Format: YYYYMMDDHHMMSS +0000
-        const year = timeStr.substr(0, 4);
-        const month = timeStr.substr(4, 2) - 1;
-        const day = timeStr.substr(6, 2);
-        const hour = timeStr.substr(8, 2);
-        const minute = timeStr.substr(10, 2);
-        const second = timeStr.substr(12, 2);
-        
-        return new Date(year, month, day, hour, minute, second);
-    }
-
-    parseM3U4U(data, channelName) {
-        // Parser le format M3U4U
-        try {
-            const jsonData = JSON.parse(data);
-            const programmes = [];
-            
-            if (jsonData.epg && Array.isArray(jsonData.epg)) {
-                jsonData.epg.forEach(item => {
-                    if (item.channel && item.channel.includes(channelName)) {
-                        programmes.push({
-                            start: new Date(item.start * 1000),
-                            end: new Date(item.stop * 1000),
-                            title: item.title || '',
-                            description: item.description || '',
-                            category: item.category || '',
-                            channel: item.channel
-                        });
-                    }
-                });
+        displayEPG() {
+            if (!this.epgData || this.epgData.length === 0) {
+                this.displayNoEPG();
+                return;
             }
             
-            return programmes;
+            const now = new Date();
+            let html = '';
             
-        } catch (e) {
-            console.warn('Erreur parsing M3U4U:', e);
-            return [];
-        }
-    }
-
-    displayEPG(programmes) {
-        const now = new Date();
-        const epgContent = document.getElementById('epgContent');
-        const epgTimeline = document.getElementById('epgTimeline');
-        
-        // Filtrer les programmes pour la date courante
-        const todayProgrammes = programmes.filter(prog => {
-            const progDate = new Date(prog.start);
-            return progDate.toDateString() === this.currentEPGDate.toDateString();
-        });
-        
-        if (todayProgrammes.length === 0) {
-            this.displayNoEPG();
-            return;
-        }
-        
-        // Générer la timeline
-        const earliest = todayProgrammes[0].start;
-        const latest = todayProgrammes[todayProgrammes.length - 1].end;
-        const totalDuration = latest - earliest;
-        
-        // Nettoyer la timeline
-        epgTimeline.innerHTML = '';
-        
-        // Ajouter les marqueurs d'heure
-        for (let hour = earliest.getHours(); hour <= latest.getHours(); hour++) {
-            const hourTime = new Date(earliest);
-            hourTime.setHours(hour, 0, 0, 0);
-            const position = ((hourTime - earliest) / totalDuration) * 100;
-            
-            const marker = document.createElement('div');
-            marker.className = 'epg-time-marker';
-            marker.style.left = `${position}%`;
-            marker.textContent = `${hour.toString().padStart(2, '0')}:00`;
-            epgTimeline.appendChild(marker);
-        }
-        
-        // Position actuelle
-        const currentPosition = ((now - earliest) / totalDuration) * 100;
-        const currentTimeBar = document.createElement('div');
-        currentTimeBar.className = 'epg-current-time';
-        currentTimeBar.id = 'epgCurrentTime';
-        currentTimeBar.style.width = `${Math.min(100, Math.max(0, currentPosition))}%`;
-        epgTimeline.appendChild(currentTimeBar);
-        
-        // Générer la liste des programmes
-        let html = '';
-        let currentProgramIndex = -1;
-        
-        todayProgrammes.forEach((prog, index) => {
-            const isCurrent = now >= prog.start && now <= prog.end;
-            const isNext = index > 0 && todayProgrammes[index - 1].end <= now && prog.start > now;
-            
-            if (isCurrent) currentProgramIndex = index;
-            
-            const duration = (prog.end - prog.start) / (1000 * 60); // en minutes
-            
-            html += `
-                <div class="epg-program ${isCurrent ? 'current' : isNext ? 'next' : ''}">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="epg-time">
-                                ${prog.start.getHours().toString().padStart(2, '0')}:${prog.start.getMinutes().toString().padStart(2, '0')}
-                                - 
-                                ${prog.end.getHours().toString().padStart(2, '0')}:${prog.end.getMinutes().toString().padStart(2, '0')}
-                                (${Math.round(duration)} min)
+            this.epgData.forEach(prog => {
+                const isCurrent = now >= prog.start && now < new Date(prog.start.getTime() + 60*60000);
+                
+                html += `
+                    <div class="epg-program ${isCurrent ? 'current' : ''}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="small text-muted">
+                                    ${prog.start.getHours().toString().padStart(2, '0')}:${prog.start.getMinutes().toString().padStart(2, '0')}
+                                    • ${prog.duration}
+                                </div>
+                                <div class="fw-bold mt-1">${prog.title}</div>
                             </div>
-                            <div class="epg-title">${this.escapeHTML(prog.title)}</div>
+                            ${isCurrent ? '<span class="badge bg-danger">EN COURS</span>' : ''}
                         </div>
-                        ${prog.category ? `<span class="epg-category">${prog.category}</span>` : ''}
+                        ${prog.description ? `<div class="small mt-2">${prog.description.substring(0, 100)}...</div>` : ''}
                     </div>
-                    ${prog.description ? `<div class="epg-desc mt-2">${this.escapeHTML(prog.description)}</div>` : ''}
+                `;
+            });
+            
+            document.getElementById('epgContent').innerHTML = html;
+            
+            // Mettre à jour la date affichée
+            const dateStr = this.currentEPGDate.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            });
+            document.getElementById('epgDate').textContent = dateStr;
+        }
+        
+        displayNoEPG() {
+            const html = `
+                <div class="text-center py-5">
+                    <i class="bi bi-tv display-4 text-muted mb-3"></i>
+                    <h5>Programme non disponible</h5>
+                    <p class="text-muted">L'EPG sera mis à jour automatiquement</p>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="player.loadEPG(player.currentChannel.name)">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Réessayer
+                    </button>
                 </div>
             `;
-        });
-        
-        // Ajouter le programme en cours en haut si trouvé
-        if (currentProgramIndex >= 0) {
-            const currentProg = todayProgrammes[currentProgramIndex];
-            const nextProg = todayProgrammes[currentProgramIndex + 1];
             
-            html = `
-                <div class="alert alert-info mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>En ce moment:</strong>
-                            <div class="mt-1">${this.escapeHTML(currentProg.title)}</div>
-                            <small>Jusqu'à ${currentProg.end.getHours().toString().padStart(2, '0')}:${currentProg.end.getMinutes().toString().padStart(2, '0')}</small>
-                        </div>
-                        ${nextProg ? `
-                            <div class="text-end">
-                                <small>À suivre:</small>
-                                <div class="small">${this.escapeHTML(nextProg.title)}</div>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-                ${html}
-            `;
+            document.getElementById('epgContent').innerHTML = html;
+            document.getElementById('epgStatus').textContent = 'EPG: Information non disponible';
+            document.getElementById('epgSource').textContent = 'EPG: Aucune source';
         }
         
-        epgContent.innerHTML = html;
-        
-        // Mettre à jour la date affichée
-        const dateStr = this.currentEPGDate.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        document.getElementById('epgCurrentDate').textContent = dateStr;
-        
-        // Mettre à jour la barre de progression en temps réel
-        setInterval(() => {
-            if (this.epgActive) {
-                const newPosition = ((new Date() - earliest) / totalDuration) * 100;
-                currentTimeBar.style.width = `${Math.min(100, Math.max(0, newPosition))}%`;
-            }
-        }, 60000); // Mettre à jour toutes les minutes
-    }
-
-    displayNoEPG() {
-        const epgContent = document.getElementById('epgContent');
-        epgContent.innerHTML = `
-            <div class="text-center py-5">
-                <i class="bi bi-tv display-4 text-muted mb-3"></i>
-                <h5>Programme non disponible</h5>
-                <p class="text-muted">Aucune information EPG trouvée pour cette chaîne</p>
-                <button class="btn btn-sm btn-outline-primary mt-2" onclick="player.reloadEPG()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Réessayer
-                </button>
-            </div>
-        `;
-        document.getElementById('epgSourceName').textContent = 'Source: Aucune';
-    }
-
-    escapeHTML(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    getProxyURL(url) {
-        // Utiliser un proxy CORS pour éviter les problèmes
-        return `https://corsproxy.io/?${encodeURIComponent(url)}`;
-    }
-
-    loadEPGSources() {
-        const sourcesList = document.getElementById('epgSourcesList');
-        sourcesList.innerHTML = '';
-        
-        this.epgSources.forEach((source, index) => {
-            const btn = document.createElement('button');
-            btn.className = `epg-source-btn ${source.active ? 'active' : ''}`;
-            btn.textContent = source.name;
-            btn.onclick = () => this.selectEPGSource(index);
-            sourcesList.appendChild(btn);
-        });
-    }
-
-    selectEPGSource(index) {
-        // Désactiver toutes les sources
-        this.epgSources.forEach(source => source.active = false);
-        
-        // Activer la source sélectionnée
-        this.epgSources[index].active = true;
-        
-        // Recharger l'EPG
-        if (this.currentChannel) {
-            this.loadEPGForChannel(this.currentChannel.name);
-        }
-        
-        // Mettre à jour l'affichage
-        this.loadEPGSources();
-        this.toggleEPGSources();
-        
-        this.showNotification(`Source EPG: ${this.epgSources[index].name}`);
-    }
-
-    toggleEPG() {
-        this.epgActive = !this.epgActive;
-        const epgContainer = document.getElementById('epgContainer');
-        const epgBtn = document.getElementById('epgBtn');
-        
-        if (this.epgActive) {
-            epgContainer.classList.add('active');
-            epgBtn.classList.add('active');
+        toggleEPG() {
+            this.epgVisible = !this.epgVisible;
+            const sidebar = document.getElementById('epgSidebar');
+            const button = document.getElementById('epgToggleBtn');
             
-            // Charger l'EPG si pas déjà chargé
-            if (!this.epgData && this.currentChannel) {
-                this.loadEPGForChannel(this.currentChannel.name);
-            }
-        } else {
-            epgContainer.classList.remove('active');
-            epgBtn.classList.remove('active');
-        }
-    }
-
-    toggleEPGSources() {
-        const sources = document.getElementById('epgSources');
-        sources.style.display = sources.style.display === 'block' ? 'none' : 'block';
-    }
-
-    changeEPGDate(days) {
-        this.currentEPGDate.setDate(this.currentEPGDate.getDate() + days);
-        
-        if (this.epgData) {
-            this.displayEPG(this.epgData);
-        }
-    }
-
-    reloadEPG() {
-        if (this.currentChannel) {
-            this.loadEPGForChannel(this.currentChannel.name);
-        }
-    }
-
-    togglePlay() {
-        if (this.player.paused()) {
-            this.player.play();
-            document.getElementById('playBtn').innerHTML = '<i class="bi bi-pause-fill"></i>';
-        } else {
-            this.player.pause();
-            document.getElementById('playBtn').innerHTML = '<i class="bi bi-play-fill"></i>';
-        }
-    }
-
-    toggleMute() {
-        this.player.muted(!this.player.muted());
-        const icon = this.player.muted() ? 'volume-mute' : 'volume-up';
-        document.getElementById('muteBtn').innerHTML = `<i class="bi bi-${icon}-fill"></i>`;
-    }
-
-    toggleFullscreen() {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            document.documentElement.requestFullscreen();
-        }
-    }
-
-    toggleQualitySelector() {
-        const selector = document.getElementById('qualitySelector');
-        selector.style.display = selector.style.display === 'block' ? 'none' : 'block';
-    }
-
-    setQuality(quality) {
-        if (this.hls && this.hls.levels) {
-            const levels = this.hls.levels;
-            
-            if (quality === 'auto') {
-                this.hls.currentLevel = -1;
+            if (this.epgVisible) {
+                sidebar.classList.add('active');
+                button.classList.add('active', 'btn-primary');
+                button.classList.remove('btn-outline-light');
+                
+                // S'assurer que l'EPG est chargé
+                if (!this.epgData && this.currentChannel) {
+                    this.loadEPG(this.currentChannel.name);
+                }
             } else {
-                const height = quality === '1080p' ? 1080 : quality === '720p' ? 720 : 480;
-                const level = levels.find(l => l.height >= height);
-                if (level) {
-                    this.hls.currentLevel = level.levelId;
+                sidebar.classList.remove('active');
+                button.classList.remove('active', 'btn-primary');
+                button.classList.add('btn-outline-light');
+            }
+        }
+        
+        reloadEPG() {
+            if (this.currentChannel) {
+                this.loadEPG(this.currentChannel.name);
+            }
+        }
+        
+        changeEPGDate(days) {
+            this.currentEPGDate.setDate(this.currentEPGDate.getDate() + days);
+            if (this.epgData) {
+                this.displayEPG();
+            }
+        }
+        
+        togglePlay() {
+            if (this.player.paused()) {
+                this.player.play();
+                document.getElementById('playBtn').innerHTML = '<i class="bi bi-pause-fill"></i>';
+            } else {
+                this.player.pause();
+                document.getElementById('playBtn').innerHTML = '<i class="bi bi-play-fill"></i>';
+            }
+        }
+        
+        toggleMute() {
+            this.player.muted(!this.player.muted());
+            const icon = this.player.muted() ? 'volume-mute' : 'volume-up';
+            document.getElementById('muteBtn').innerHTML = `<i class="bi bi-${icon}-fill"></i>`;
+        }
+        
+        toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        changeQuality(quality) {
+            if (this.hls && quality !== 'auto') {
+                const levels = this.hls.levels;
+                if (levels) {
+                    const height = parseInt(quality);
+                    const level = levels.find(l => l.height >= height);
+                    if (level) {
+                        this.hls.currentLevel = level.levelId;
+                    }
                 }
             }
+        }
+        
+        updateVolume(value) {
+            this.player.volume(value / 100);
+        }
+        
+        showError() {
+            // Simple error display
+            document.getElementById('channelName').innerHTML += 
+                '<br><small class="text-danger">Erreur de chargement</small>';
+        }
+        
+        setupControls() {
+            // Raccourcis clavier
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        this.togglePlay();
+                        break;
+                    case 'KeyE':
+                        this.toggleEPG();
+                        break;
+                    case 'KeyF':
+                        this.toggleFullscreen();
+                        break;
+                    case 'Escape':
+                        if (this.epgVisible) this.toggleEPG();
+                        break;
+                }
+            });
             
-            this.showNotification(`Qualité: ${quality}`);
-            this.toggleQualitySelector();
-        }
-    }
-
-    reloadStream() {
-        if (this.currentChannel) {
-            this.loadStream(this.currentChannel.url);
-        }
-    }
-
-    updateVolume(value) {
-        this.player.volume(value / 100);
-    }
-
-    showStatus(message) {
-        const overlay = document.getElementById('statusOverlay');
-        document.getElementById('statusText').textContent = message;
-        overlay.style.display = 'flex';
-    }
-
-    hideStatus() {
-        document.getElementById('statusOverlay').style.display = 'none';
-    }
-
-    showError(title, message) {
-        const overlay = document.getElementById('errorOverlay');
-        document.getElementById('errorTitle').textContent = title;
-        document.getElementById('errorMessage').textContent = message;
-        overlay.style.display = 'flex';
-    }
-
-    showNotification(message) {
-        const notification = document.getElementById('notification');
-        document.getElementById('notificationContent').textContent = message;
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    }
-
-    handleError(error) {
-        console.error('Player error:', error);
-        
-        let errorMessage = 'Erreur inconnue';
-        if (error.message) {
-            errorMessage = error.message;
-        } else if (this.player.error()) {
-            errorMessage = this.player.error().message;
-        }
-        
-        this.showError('Erreur de lecture', errorMessage);
-    }
-
-    onLoadedMetadata() {
-        // Mettre à jour la qualité détectée
-        const videoHeight = this.player.videoHeight();
-        if (videoHeight >= 2160) this.currentChannel.quality = '4K';
-        else if (videoHeight >= 1080) this.currentChannel.quality = 'FHD';
-        else if (videoHeight >= 720) this.currentChannel.quality = 'HD';
-        else this.currentChannel.quality = 'SD';
-        
-        this.updateChannelInfo();
-    }
-
-    setupEventListeners() {
-        // Volume slider
-        const volumeSlider = document.getElementById('volumeSlider');
-        if (this.player) {
-            volumeSlider.value = this.player.volume() * 100;
-        }
-        
-        // Raccourcis clavier
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            
-            switch(e.code) {
-                case 'Space':
-                    e.preventDefault();
-                    this.togglePlay();
-                    break;
-                case 'KeyM':
-                    this.toggleMute();
-                    break;
-                case 'KeyF':
-                case 'F11':
-                    this.toggleFullscreen();
-                    break;
-                case 'KeyE':
-                    this.toggleEPG();
-                    break;
-                case 'Escape':
-                    if (this.epgActive) this.toggleEPG();
-                    if (document.fullscreenElement) this.toggleFullscreen();
-                    break;
-                case 'ArrowLeft':
-                    if (this.player) {
-                        this.player.currentTime(this.player.currentTime() - 10);
-                    }
-                    break;
-                case 'ArrowRight':
-                    if (this.player) {
-                        this.player.currentTime(this.player.currentTime() + 10);
-                    }
-                    break;
-                case 'ArrowUp':
-                    if (this.player) {
-                        this.player.volume(Math.min(1, this.player.volume() + 0.1));
-                        volumeSlider.value = this.player.volume() * 100;
-                    }
-                    break;
-                case 'ArrowDown':
-                    if (this.player) {
-                        this.player.volume(Math.max(0, this.player.volume() - 0.1));
-                        volumeSlider.value = this.player.volume() * 100;
-                    }
-                    break;
-            }
-        });
-        
-        // Plein écran
-        document.addEventListener('fullscreenchange', () => {
-            const isFullscreen = !!document.fullscreenElement;
-            // Optionnel: ajuster l'UI en mode plein écran
-        });
-        
-        // Clic pour masquer l'EPG
-        document.addEventListener('click', (e) => {
-            if (this.epgActive && !e.target.closest('#epgContainer') && 
-                !e.target.closest('#epgBtn') && !e.target.closest('#epgSources')) {
+            // Bouton EPG toggle
+            document.getElementById('epgToggleBtn').addEventListener('click', () => {
                 this.toggleEPG();
+            });
+            
+            // Auto-hide EPG on mobile
+            if (window.innerWidth < 768) {
+                this.epgVisible = false;
+                document.getElementById('epgSidebar').classList.remove('active');
             }
-        });
-    }
-}
-
-// Initialisation
-let player = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-    player = new IPTVPlayer();
-    
-    // Demander la permission de lecture automatique
-    if (document.pictureInPictureEnabled) {
-        // Prêt pour Picture-in-Picture
-    }
-});
-
-// Gestion du Picture-in-Picture
-if ('pictureInPictureEnabled' in document) {
-    const pipButton = document.createElement('button');
-    pipButton.className = 'control-btn';
-    pipButton.innerHTML = '<i class="bi bi-pip"></i>';
-    pipButton.onclick = () => {
-        if (document.pictureInPictureElement) {
-            document.exitPictureInPicture();
-        } else if (player && player.player) {
-            player.player.requestPictureInPicture();
         }
-    };
+    }
     
-    document.querySelector('.controls-bar').appendChild(pipButton);
-}
-</script>
+    // Initialiser le lecteur
+    let player = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        player = new SimpleIPTVPlayer();
+    });
+    </script>
 </body>
-    </html>
+                                </html>
