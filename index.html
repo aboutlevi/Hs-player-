@@ -3,321 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Lecteur IPTV Premium</title>
+    <title>⚡ IPTV Pro</title>
     
-    <!-- Bootstrap 5 Dark Theme -->
+    <!-- Bootstrap minimal -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Video.js -->
     <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
     
-    <!-- Custom CSS Premium -->
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary: #667eea;
             --dark-bg: #0f172a;
-            --darker-bg: #0a0f1c;
-            --card-bg: rgba(30, 41, 59, 0.7);
         }
         
         body {
             background: var(--dark-bg);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: #e2e8f0;
-            overflow-x: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+            margin: 0;
+            padding: 0;
         }
         
-        /* Navbar Glassmorphism */
-        .navbar-glass {
-            background: rgba(15, 23, 42, 0.9) !important;
+        /* Navbar simple */
+        .navbar {
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 0;
         }
         
-        /* Player container */
-        .player-container {
-            border-radius: 15px;
+        /* Player */
+        .player-wrapper {
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
             background: #000;
         }
         
-        /* Cards avec effet glass */
-        .card-glass {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            transition: all 0.3s ease;
+        /* Nom de la chaîne - effet gradient */
+        .channel-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            line-height: 1.2;
         }
         
-        .card-glass:hover {
-            border-color: rgba(255, 255, 255, 0.2);
+        /* Programme en cours */
+        .now-playing {
+            color: #10b981;
+            font-weight: 500;
+            font-size: 1rem;
         }
         
-        /* Boutons gradients */
-        .btn-gradient-primary {
-            background: var(--primary-gradient);
-            border: none;
-            color: white;
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        /* EPG */
+        .epg-container {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            height: fit-content;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
-        .btn-gradient-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        /* EPG items */
         .epg-item {
-            transition: all 0.3s ease;
-            cursor: pointer;
-            padding: 12px 15px;
+            padding: 12px 16px;
             border-left: 4px solid transparent;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: 0.2s;
         }
         
         .epg-item:hover {
             background: rgba(102, 126, 234, 0.1);
-            border-left-color: #667eea;
-        }
-        
-        .epg-item.active {
-            background: rgba(16, 185, 129, 0.15);
-            border-left-color: #10b981;
+            border-left-color: var(--primary);
         }
         
         .epg-item.playing {
-            background: rgba(59, 130, 246, 0.15);
-            border-left-color: #3b82f6;
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
         }
         
         .epg-time {
-            font-size: 0.85rem;
             color: #94a3b8;
+            font-size: 0.85rem;
             min-width: 70px;
         }
         
         .epg-title {
             font-weight: 600;
-            color: #e2e8f0;
-        }
-        
-        .epg-desc {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-top: 5px;
-        }
-        
-        /* Channel info */
-        .channel-info {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .channel-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
-        }
-        
-        .now-playing {
-            font-size: 0.95rem;
-            color: #10b981;
-            font-weight: 500;
-        }
-        
-        /* Quality badges */
-        .badge-quality {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .badge-hd {
-            background: linear-gradient(135deg, #48dbfb, #0abde3);
-        }
-        
-        .badge-fhd {
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: #fff;
         }
         
         /* Scrollbar */
-        .epg-scroll {
-            max-height: 500px;
-            overflow-y: auto;
+        .epg-container::-webkit-scrollbar {
+            width: 4px;
         }
         
-        .epg-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .epg-scroll::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.5);
+        .epg-container::-webkit-scrollbar-thumb {
+            background: var(--primary);
             border-radius: 10px;
         }
         
-        .epg-scroll::-webkit-scrollbar-thumb {
-            background: var(--primary-gradient);
-            border-radius: 10px;
+        /* Statut */
+        .status-badge {
+            font-size: 0.9rem;
         }
         
-        /* Loading */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #667eea;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Video player adjustments */
-        .video-js {
-            background-color: #000 !important;
-        }
-        
-        .vjs-poster {
-            background-color: transparent !important;
+        /* Aucun élément superflu */
+        .badge, .card, .modal, .list-group, .stream-info {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-glass navbar-expand-lg fixed-top">
+    <!-- Navbar ultra minimaliste -->
+    <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <div class="bg-gradient-primary rounded-circle p-2 me-2">
-                    <i class="bi bi-play-circle-fill fs-4"></i>
-                </div>
-                <span class="fw-bold fs-4">IPTV <span class="text-gradient-primary">Premium</span></span>
-            </a>
-            
             <div class="d-flex align-items-center">
-                <div id="connectionStatus" class="me-3">
-                    <span class="badge bg-success">
-                        <i class="bi bi-circle-fill me-1"></i> CONNECTÉ
-                    </span>
+                <div class="bg-primary rounded-circle p-2 me-2" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <i class="bi bi-play-circle-fill fs-4 text-white"></i>
                 </div>
-                <button class="btn btn-gradient-primary" onclick="toggleTheme()">
-                    <i class="bi bi-moon-stars"></i> Thème
-                </button>
+                <span class="fw-bold fs-4" style="background: linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">IPTV Pro</span>
+            </div>
+            <div>
+                <span id="statusIndicator" class="status-badge text-success">
+                    <i class="bi bi-circle-fill me-1" style="font-size: 0.7rem;"></i> Prêt
+                </span>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container-fluid py-5 mt-5">
-        <div class="row">
-            <!-- Player Section -->
-            <div class="col-lg-9 col-xl-10">
-                <div class="container py-3">
-                    <div class="player-container mb-4">
-                        <video id="video-player" class="video-js vjs-fluid" controls autoplay preload="auto">
-                            <p class="vjs-no-js">
-                                JavaScript est requis pour ce lecteur.
-                            </p>
-                        </video>
-                    </div>
-                    
-                    <!-- Channel Info -->
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <div class="channel-info">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="channel-name" id="currentChannelName">
-                                            Chargement...
-                                        </div>
-                                        <div class="now-playing">
-                                            <i class="bi bi-play-circle me-1"></i>
-                                            <span id="currentProgram">Programme en cours</span>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <span class="badge badge-quality badge-hd" id="qualityBadge">HD</span>
-                                        <span class="badge bg-dark" id="bufferInfo">Buffer: 0s</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="d-flex gap-2 justify-content-end">
-                                <button class="btn btn-outline-light btn-sm" onclick="toggleFullscreen()">
-                                    <i class="bi bi-arrows-fullscreen"></i> Plein écran
-                                </button>
-                                <button class="btn btn-outline-light btn-sm" onclick="reloadStream()">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#epgModal">
-                                    <i class="bi bi-tv"></i> EPG
-                                </button>
-                            </div>
+    <!-- Contenu principal -->
+    <div class="container-fluid px-4 py-4">
+        <div class="row g-4">
+            <!-- COLONNE PLAYER (70%) -->
+            <div class="col-lg-7 col-xl-8">
+                <div class="player-wrapper">
+                    <video id="videoPlayer" class="video-js vjs-fluid vjs-big-play-centered" controls autoplay preload="auto">
+                        <p class="vjs-no-js">JavaScript requis</p>
+                    </video>
+                </div>
+                
+                <!-- INFOS CHAÎNE - UNIQUEMENT ça -->
+                <div class="d-flex justify-content-between align-items-start mt-3">
+                    <div>
+                        <h1 class="channel-title" id="channelNameDisplay">Chaîne IPTV</h1>
+                        <div class="now-playing mt-1">
+                            <i class="bi bi-broadcast me-1"></i>
+                            <span id="currentEpgProgram">Chargement EPG...</span>
                         </div>
                     </div>
+                    <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="goFullscreen()">
+                        <i class="bi bi-arrows-fullscreen me-1"></i> Plein écran
+                    </button>
                 </div>
             </div>
             
-            <!-- EPG Sidebar -->
-            <div class="col-lg-3 col-xl-2 border-start border-secondary">
-                <div class="sticky-top pt-3" style="top: 80px;">
-                    <h5 class="fw-bold mb-3">
-                        <i class="bi bi-tv me-2"></i> Programme TV
+            <!-- COLONNE EPG (30%) - UNIQUEMENT EPG -->
+            <div class="col-lg-5 col-xl-4">
+                <div class="epg-container">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-tv me-2" style="color: #667eea;"></i> 
+                        Programme TV
                     </h5>
                     
-                    <div id="epgSidebar" class="epg-scroll">
+                    <div id="epgList">
                         <div class="text-center py-5">
-                            <div class="loading-spinner mb-2"></div>
-                            <p class="text-muted">Chargement EPG...</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Stream Info -->
-                    <div class="card-glass mt-4 p-3">
-                        <h6 class="fw-bold mb-2">Informations</h6>
-                        <ul class="list-unstyled small mb-0">
-                            <li class="mb-1"><i class="bi bi-check-circle text-success me-2"></i>HLS Supporté</li>
-                            <li class="mb-1"><i class="bi bi-broadcast text-primary me-2"></i>Lecture adaptative</li>
-                            <li class="mb-1"><i class="bi bi-shield-check text-info me-2"></i>Connexion sécurisée</li>
-                            <li><i class="bi bi-database text-warning me-2"></i>EPG: iptv-org.github.io</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- EPG Modal (pour mobile) -->
-    <div class="modal fade" id="epgModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title">
-                        <i class="bi bi-tv me-2"></i> Guide des Programmes
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="epgModalContent">
-                        <div class="text-center py-5">
-                            <div class="loading-spinner mb-2"></div>
-                            <p class="text-muted">Chargement EPG...</p>
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <span class="text-muted">Récupération du guide...</span>
                         </div>
                     </div>
                 </div>
@@ -325,369 +184,319 @@
         </div>
     </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts -->
     <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
-    <!-- Main Application Script -->
+
     <script>
-        // Configuration
-        const CONFIG = {
-            epgUrl: "https://iptv-org.github.io/epg/guides/fr.xml",
-            proxies: [
-                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                url => `https://corsproxy.io/?${encodeURIComponent(url)}`
-            ]
-        };
-        
-        // Récupérer l'URL du flux depuis les paramètres
-        const urlParams = new URLSearchParams(window.location.search);
-        const streamUrl = urlParams.get('url');
-        const channelName = urlParams.get('name') || "Chaîne TV";
-        
-        class IPTVPlayer {
-            constructor() {
-                this.player = null;
-                this.hls = null;
-                this.epgData = [];
-                this.currentChannel = channelName;
-                
-                this.initPlayer();
-                this.loadEPG();
-                this.setupEventListeners();
-            }
+        (function() {
+            "use strict";
+
+            // --------------------------------------------------------
+            // 1. RÉCUPÉRATION DU FLUX DEPUIS L'URL (FORMAT BOT)
+            // --------------------------------------------------------
+            const urlParams = new URLSearchParams(window.location.search);
             
-            initPlayer() {
-                this.player = videojs('video-player', {
-                    fluid: true,
-                    responsive: true,
-                    autoplay: true,
-                    playbackRates: [0.5, 1, 1.25, 1.5, 2],
-                    controlBar: {
-                        children: [
-                            'playToggle',
-                            'volumePanel',
-                            'currentTimeDisplay',
-                            'timeDivider',
-                            'durationDisplay',
-                            'progressControl',
-                            'remainingTimeDisplay',
-                            'playbackRateMenuButton',
-                            'fullscreenToggle'
-                        ]
-                    },
-                    html5: {
-                        hlsjsConfig: {
-                            enableWorker: true,
-                            lowLatencyMode: true,
-                            backBufferLength: 90
-                        }
+            let streamUrl = null;
+            let channelName = "Chaîne IPTV";
+            let channelLogo = null;
+            let channelQuality = "HD";
+
+            // PRIORITÉ 1 : Format "channels=[{...}]" (CELUI DU BOT)
+            try {
+                const channelsParam = urlParams.get('channels');
+                if (channelsParam) {
+                    const decoded = decodeURIComponent(channelsParam);
+                    const channels = JSON.parse(decoded);
+                    
+                    if (Array.isArray(channels) && channels.length > 0) {
+                        const channel = channels[0];
+                        streamUrl = channel.url || null;
+                        channelName = channel.name || channelName;
+                        channelLogo = channel.logo || null;
+                        channelQuality = channel.quality || "HD";
+                        
+                        console.log("✅ Format BOT détecté (channels)");
                     }
-                });
-                
-                // Charger le flux si fourni
-                if (streamUrl) {
-                    this.loadStream(streamUrl);
-                    document.getElementById('currentChannelName').textContent = this.currentChannel;
-                } else {
-                    this.showError("Aucun flux fourni. Ajoutez ?url=votre_flux.m3u8&name=NomChaîne à l'URL");
                 }
-                
-                // Stats buffer
-                setInterval(() => this.updateBufferStats(), 1000);
+            } catch(e) {
+                console.log("❌ Erreur parsing channels:", e);
             }
-            
-            loadStream(url) {
-                // Détruire HLS précédent
-                if (this.hls) {
-                    this.hls.destroy();
-                }
-                
-                // Vérifier le support HLS
-                if (Hls.isSupported()) {
-                    this.hls = new Hls({
+
+            // PRIORITÉ 2 : Format "url=..." et "name=..."
+            if (!streamUrl) {
+                streamUrl = urlParams.get('url');
+                channelName = urlParams.get('name') || channelName;
+                if (streamUrl) console.log("✅ Format URL standard détecté");
+            }
+
+            // --------------------------------------------------------
+            // 2. NETTOYAGE DE L'URL
+            // --------------------------------------------------------
+            if (streamUrl) {
+                streamUrl = streamUrl.replace(/['"]+/g, '').trim();
+                console.log("📡 URL du flux:", streamUrl);
+            } else {
+                console.error("❌ Aucun flux trouvé dans l'URL");
+                document.body.innerHTML = `
+                    <div class="container vh-100 d-flex align-items-center justify-content-center">
+                        <div class="text-center p-5" style="background:rgba(30,41,59,0.5); border-radius:20px;">
+                            <i class="bi bi-exclamation-triangle fs-1 text-warning mb-3"></i>
+                            <h3>Aucun flux spécifié</h3>
+                            <p class="text-muted">Utilisez ?channels=[{"url":"votre_flux.m3u8"}]</p>
+                        </div>
+                    </div>
+                `;
+                return; // Stop ici
+            }
+
+            // --------------------------------------------------------
+            // 3. INITIALISATION DU LECTEUR
+            // --------------------------------------------------------
+            const player = videojs('videoPlayer', {
+                controls: true,
+                autoplay: true,
+                preload: 'auto',
+                fluid: true,
+                responsive: true,
+                playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                html5: {
+                    hlsjsConfig: {
                         enableWorker: true,
                         lowLatencyMode: true,
-                        backBufferLength: 90,
-                        maxBufferLength: 30
+                        backBufferLength: 60,
+                        maxBufferLength: 30,
+                        xhrSetup: function(xhr, url) {
+                            // Contournement pour flux protégés
+                            xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+                            xhr.setRequestHeader('Referer', window.location.origin + '/');
+                            xhr.setRequestHeader('Origin', window.location.origin);
+                        }
+                    }
+                }
+            });
+
+            // Afficher le nom de la chaîne
+            document.getElementById('channelNameDisplay').textContent = channelName;
+
+            // --------------------------------------------------------
+            // 4. CHARGEMENT DU FLUX HLS
+            // --------------------------------------------------------
+            let hls = null;
+
+            function loadStream(url) {
+                if (!url) return;
+
+                // Détruire l'ancien HLS
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+
+                // Vérifier support HLS
+                if (Hls.isSupported()) {
+                    hls = new Hls({
+                        enableWorker: true,
+                        lowLatencyMode: true,
+                        backBufferLength: 60,
+                        xhrSetup: function(xhr, url) {
+                            xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+                            xhr.setRequestHeader('Referer', 'https://aboutlevi.github.io/');
+                            xhr.setRequestHeader('Origin', 'https://aboutlevi.github.io');
+                        }
                     });
-                    
-                    this.hls.loadSource(url);
-                    this.hls.attachMedia(this.player.tech().el());
-                    
-                    this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        console.log("Flux chargé avec succès");
-                        this.updateQualityBadge();
+
+                    hls.loadSource(url);
+                    hls.attachMedia(player.tech().el());
+
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        player.play();
+                        document.getElementById('statusIndicator').innerHTML = '<i class="bi bi-circle-fill me-1 text-success"></i> Lecture';
                     });
-                    
-                    this.hls.on(Hls.Events.ERROR, (event, data) => {
-                        this.handleHlsError(data);
+
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        console.error('HLS Error:', data);
+                        
+                        if (data.response && data.response.code === 403) {
+                            document.getElementById('statusIndicator').innerHTML = '<i class="bi bi-exclamation-triangle me-1 text-warning"></i> Flux protégé (403)';
+                        }
                     });
-                    
-                } else if (this.player.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari native
-                    this.player.src({ src: url, type: 'application/x-mpegURL' });
+
+                } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari
+                    player.src({ src: url, type: 'application/x-mpegURL' });
+                    player.play();
+                    document.getElementById('statusIndicator').innerHTML = '<i class="bi bi-circle-fill me-1 text-success"></i> Lecture (Safari)';
                 } else {
-                    this.showError("Votre navigateur ne supporte pas la lecture HLS");
+                    player.src({ src: url, type: 'video/mp4' });
+                    player.play();
                 }
             }
-            
-            async loadEPG() {
+
+            // Lancer le chargement
+            loadStream(streamUrl);
+
+            // --------------------------------------------------------
+            // 5. EPG - iptv-org.github.io
+            // --------------------------------------------------------
+            async function fetchEPG() {
+                const epgUrl = "https://iptv-org.github.io/epg/guides/fr.xml";
+                const proxies = [
+                    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+                ];
+
+                for (let proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy(epgUrl));
+                        if (response.ok) {
+                            const xmlText = await response.text();
+                            return xmlText;
+                        }
+                    } catch(e) {
+                        console.log("Proxy échoué, essai suivant...");
+                    }
+                }
+                throw new Error("EPG inaccessible");
+            }
+
+            async function loadEPG() {
                 try {
-                    const xmlText = await this.fetchWithProxy(CONFIG.epgUrl);
-                    const xml = new DOMParser().parseFromString(xmlText, "text/xml");
-                    
-                    // Trouver le canal correspondant
-                    const channels = xml.getElementsByTagName("channel");
+                    const xmlText = await fetchEPG();
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(xmlText, "text/xml");
+
+                    // Chercher l'ID de la chaîne
+                    const channels = xml.querySelectorAll("channel");
                     let channelId = null;
-                    
-                    for (let channel of channels) {
-                        const name = channel.getElementsByTagName("display-name")[0]?.textContent;
-                        if (name && name.toLowerCase().includes(this.currentChannel.toLowerCase())) {
-                            channelId = channel.getAttribute("id");
+
+                    for (let ch of channels) {
+                        const name = ch.querySelector("display-name")?.textContent || "";
+                        if (name.toLowerCase().includes(channelName.toLowerCase())) {
+                            channelId = ch.getAttribute("id");
                             break;
                         }
                     }
-                    
-                    if (channelId) {
-                        // Récupérer les programmes
-                        const programs = xml.getElementsByTagName("programme");
-                        this.epgData = [];
-                        
-                        for (let program of programs) {
-                            if (program.getAttribute("channel") === channelId) {
-                                const start = program.getAttribute("start");
-                                const stop = program.getAttribute("stop");
-                                const title = program.getElementsByTagName("title")[0]?.textContent || "Inconnu";
-                                const desc = program.getElementsByTagName("desc")[0]?.textContent || "";
-                                
-                                this.epgData.push({
-                                    start: this.formatEPGTime(start),
-                                    stop: this.formatEPGTime(stop),
-                                    title: title,
-                                    description: desc,
-                                    isNow: this.isCurrentProgram(start, stop)
-                                });
-                            }
-                        }
-                        
-                        // Trier par heure et limiter à 20
-                        this.epgData.sort((a, b) => a.start.localeCompare(b.start));
-                        this.epgData = this.epgData.slice(0, 20);
-                        
-                        // Afficher EPG
-                        this.displayEPG();
-                        
-                        // Mettre à jour le programme en cours
-                        const current = this.epgData.find(p => p.isNow);
-                        if (current) {
-                            document.getElementById('currentProgram').textContent = current.title;
-                        }
+
+                    if (!channelId) {
+                        document.getElementById('epgList').innerHTML = '<div class="text-center py-4 text-muted">📺 EPG non disponible pour cette chaîne</div>';
+                        return;
                     }
+
+                    // Récupérer les programmes
+                    const programs = xml.querySelectorAll("programme");
+                    const epgItems = [];
+
+                    programs.forEach(prog => {
+                        if (prog.getAttribute("channel") === channelId) {
+                            const start = prog.getAttribute("start");
+                            const stop = prog.getAttribute("stop");
+                            const title = prog.querySelector("title")?.textContent || "Sans titre";
+                            const desc = prog.querySelector("desc")?.textContent || "";
+
+                            // Format heure
+                            let startTime = start;
+                            if (start && start.length >= 12) {
+                                startTime = start.substring(8, 10) + ":" + start.substring(10, 12);
+                            }
+
+                            // Vérifier si c'est maintenant
+                            const now = new Date();
+                            const startDate = parseEPGDate(start);
+                            const stopDate = parseEPGDate(stop);
+                            const isNow = (now >= startDate && now <= stopDate);
+
+                            epgItems.push({
+                                start: startTime,
+                                title: title,
+                                desc: desc,
+                                isNow: isNow
+                            });
+                        }
+                    });
+
+                    // Trier par heure
+                    epgItems.sort((a, b) => a.start.localeCompare(b.start));
                     
-                } catch (error) {
+                    // Afficher
+                    displayEPG(epgItems);
+                    
+                    // Programme en cours
+                    const current = epgItems.find(p => p.isNow);
+                    if (current) {
+                        document.getElementById('currentEpgProgram').innerHTML = `<i class="bi bi-play-circle-fill me-1"></i> ${current.title}`;
+                    } else {
+                        document.getElementById('currentEpgProgram').innerHTML = '<span class="text-muted">Aucun programme</span>';
+                    }
+
+                } catch(error) {
                     console.error("Erreur EPG:", error);
-                    this.displayEPGError();
+                    document.getElementById('epgList').innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-wifi-off me-2"></i>EPG temporairement indisponible</div>';
                 }
             }
-            
-            formatEPGTime(epgTime) {
-                // Format: 20240101120000 -> 12:00
-                if (epgTime.length >= 12) {
-                    const hour = epgTime.substring(8, 10);
-                    const minute = epgTime.substring(10, 12);
-                    return `${hour}:${minute}`;
-                }
-                return epgTime;
-            }
-            
-            isCurrentProgram(startTime, stopTime) {
-                const now = new Date();
-                const start = this.parseEPGDate(startTime);
-                const stop = this.parseEPGDate(stopTime);
-                return now >= start && now <= stop;
-            }
-            
-            parseEPGDate(epgTime) {
-                // Format: 20240101120000
-                if (epgTime.length === 14) {
+
+            function parseEPGDate(epgTime) {
+                if (!epgTime || epgTime.length < 14) return new Date();
+                try {
                     const year = epgTime.substring(0, 4);
                     const month = epgTime.substring(4, 6);
                     const day = epgTime.substring(6, 8);
                     const hour = epgTime.substring(8, 10);
                     const minute = epgTime.substring(10, 12);
                     return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+                } catch(e) {
+                    return new Date();
                 }
-                return new Date();
             }
-            
-            displayEPG() {
-                const sidebar = document.getElementById('epgSidebar');
-                const modal = document.getElementById('epgModalContent');
+
+            function displayEPG(items) {
+                const container = document.getElementById('epgList');
                 
-                if (this.epgData.length === 0) {
-                    sidebar.innerHTML = '<div class="text-center py-4 text-muted">Aucun programme disponible</div>';
-                    modal.innerHTML = '<div class="text-center py-4 text-muted">Aucun programme disponible</div>';
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<div class="text-center py-4 text-muted">📭 Aucun programme trouvé</div>';
                     return;
                 }
-                
+
                 let html = '';
-                this.epgData.forEach((program, index) => {
-                    const isNow = program.isNow;
-                    const isPlaying = index === 0 && isNow;
-                    
+                items.slice(0, 20).forEach((item, index) => {
+                    const activeClass = item.isNow ? 'playing' : '';
                     html += `
-                        <div class="epg-item ${isNow ? 'playing' : ''} ${isPlaying ? 'active' : ''}">
+                        <div class="epg-item ${activeClass}">
                             <div class="d-flex">
-                                <div class="epg-time">${program.start}</div>
-                                <div class="flex-grow-1">
-                                    <div class="epg-title">${program.title}</div>
-                                    ${program.description ? `<div class="epg-desc">${program.description}</div>` : ''}
+                                <div class="epg-time">${item.start}</div>
+                                <div>
+                                    <div class="epg-title">${item.title}</div>
+                                    ${item.desc ? `<small class="text-muted">${item.desc.substring(0, 60)}...</small>` : ''}
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-                
-                sidebar.innerHTML = html;
-                modal.innerHTML = html;
+
+                container.innerHTML = html;
             }
-            
-            displayEPGError() {
-                const html = '<div class="text-center py-4 text-muted"><i class="bi bi-exclamation-triangle me-2"></i>EPG indisponible</div>';
-                document.getElementById('epgSidebar').innerHTML = html;
-                document.getElementById('epgModalContent').innerHTML = html;
-            }
-            
-            async fetchWithProxy(url) {
-                for (let proxy of CONFIG.proxies) {
-                    try {
-                        const response = await fetch(proxy(url));
-                        if (response.ok) return await response.text();
-                    } catch (error) {
-                        console.warn(`Proxy ${proxy.name || 'inconnu'} a échoué`);
-                    }
+
+            // Lancer l'EPG
+            loadEPG();
+            setInterval(loadEPG, 300000); // Rafraîchir toutes les 5 minutes
+
+            // --------------------------------------------------------
+            // 6. FONCTIONS UTILES
+            // --------------------------------------------------------
+            window.goFullscreen = function() {
+                if (!document.fullscreenElement) {
+                    player.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
                 }
-                throw new Error("Tous les proxys ont échoué");
-            }
-            
-            updateQualityBadge() {
-                if (this.hls && this.hls.levels && this.hls.levels.length > 0) {
-                    const level = this.hls.levels[this.hls.currentLevel];
-                    if (level && level.height) {
-                        let quality = "SD";
-                        if (level.height >= 1080) quality = "FHD";
-                        else if (level.height >= 720) quality = "HD";
-                        
-                        const badge = document.getElementById('qualityBadge');
-                        badge.textContent = quality;
-                        badge.className = `badge badge-quality ${quality === 'FHD' ? 'badge-fhd' : 'badge-hd'}`;
-                    }
-                }
-            }
-            
-            updateBufferStats() {
-                if (this.player && this.player.buffered() && this.player.buffered().length > 0) {
-                    const buffered = this.player.buffered().end(0) - this.player.currentTime();
-                    document.getElementById('bufferInfo').textContent = `Buffer: ${buffered.toFixed(1)}s`;
-                }
-            }
-            
-            handleHlsError(data) {
-                console.error('HLS Error:', data);
-                
-                const status = document.getElementById('connectionStatus');
-                status.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> ERREUR</span>';
-                
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            this.showError("Erreur réseau. Reconnexion...");
-                            setTimeout(() => {
-                                if (this.hls) this.hls.startLoad();
-                            }, 2000);
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            this.hls.recoverMediaError();
-                            break;
-                        default:
-                            this.showError("Erreur de lecture");
-                            break;
-                    }
-                }
-            }
-            
-            showError(message) {
-                // Notification simple
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-danger position-fixed top-0 end-0 m-3';
-                alert.style.zIndex = '9999';
-                alert.innerHTML = `
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close btn-close-white float-end" onclick="this.parentElement.remove()"></button>
-                `;
-                document.body.appendChild(alert);
-                
-                setTimeout(() => {
-                    if (alert.parentElement) alert.remove();
-                }, 5000);
-            }
-            
-            setupEventListeners() {
-                // Auto-update EPG toutes les 5 minutes
-                setInterval(() => this.loadEPG(), 300000);
-            }
-        }
-        
-        // Initialiser l'application
-        let player;
-        document.addEventListener('DOMContentLoaded', () => {
-            player = new IPTVPlayer();
-        });
-        
-        // Fonctions globales
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                player.player.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-        
-        function reloadStream() {
-            if (streamUrl) {
-                player.loadStream(streamUrl);
-            }
-        }
-        
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-bs-theme') === 'dark';
-            html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-        }
-        
-        // Redirection si pas d'URL
-        if (!streamUrl) {
-            document.addEventListener('DOMContentLoaded', () => {
-                document.body.innerHTML = `
-                    <div class="container vh-100 d-flex justify-content-center align-items-center">
-                        <div class="card-glass p-5 text-center">
-                            <i class="bi bi-tv fs-1 text-primary mb-3"></i>
-                            <h3 class="mb-3">Lecteur IPTV Premium</h3>
-                            <p class="mb-4">Ajoutez l'URL du flux dans l'adresse:</p>
-                            <code class="d-block p-3 bg-dark rounded mb-4">
-                                ?url=votre_flux.m3u8&name=Nom de la Chaîne
-                            </code>
-                            <button class="btn btn-gradient-primary" onclick="location.href='?'">
-                                <i class="bi bi-arrow-return-left me-2"></i>Retour
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+            };
+
+            // Rechargement si besoin
+            window.reloadStream = function() {
+                if (streamUrl) loadStream(streamUrl);
+            };
+
+        })();
     </script>
 </body>
-                </html>
+                    </html>
