@@ -3,29 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ SportStream Pro - Lecteur Premium</title>
+    <title>⚡ Lecteur IPTV Premium</title>
     
     <!-- Bootstrap 5 Dark Theme -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
-    <!-- Video.js avec skin premium -->
+    <!-- Video.js -->
     <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
-    <link href="https://unpkg.com/@videojs/themes@1.0.0/dist/forest/index.css" rel="stylesheet">
-    
-    <!-- Animate.css pour animations -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
     <!-- Custom CSS Premium -->
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --warning-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
             --dark-bg: #0f172a;
             --darker-bg: #0a0f1c;
             --card-bg: rgba(30, 41, 59, 0.7);
-            --glass-effect: backdrop-filter: blur(10px) saturate(180%);
         }
         
         body {
@@ -37,22 +30,18 @@
         
         /* Navbar Glassmorphism */
         .navbar-glass {
-            background: rgba(15, 23, 42, 0.8) !important;
+            background: rgba(15, 23, 42, 0.9) !important;
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* Hero Section avec gradient animé */
-        .hero-gradient {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-        
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Player container */
+        .player-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #000;
         }
         
         /* Cards avec effet glass */
@@ -60,13 +49,11 @@
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border-radius: 15px;
             transition: all 0.3s ease;
         }
         
         .card-glass:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             border-color: rgba(255, 255, 255, 0.2);
         }
         
@@ -75,7 +62,7 @@
             background: var(--primary-gradient);
             border: none;
             color: white;
-            padding: 12px 30px;
+            padding: 10px 25px;
             border-radius: 50px;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -86,124 +73,145 @@
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
         
-        /* Player container */
-        .player-container {
+        /* EPG items */
+        .epg-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 12px 15px;
+            border-left: 4px solid transparent;
+        }
+        
+        .epg-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+        }
+        
+        .epg-item.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: #10b981;
+        }
+        
+        .epg-item.playing {
+            background: rgba(59, 130, 246, 0.15);
+            border-left-color: #3b82f6;
+        }
+        
+        .epg-time {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            min-width: 70px;
+        }
+        
+        .epg-title {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        
+        .epg-desc {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        
+        /* Channel info */
+        .channel-info {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .channel-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .now-playing {
+            font-size: 0.95rem;
+            color: #10b981;
+            font-weight: 500;
+        }
+        
+        /* Quality badges */
+        .badge-quality {
+            padding: 5px 10px;
             border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            font-weight: 600;
         }
         
-        /* Badges animés */
-        .badge-pulse {
-            animation: pulse 2s infinite;
+        .badge-hd {
+            background: linear-gradient(135deg, #48dbfb, #0abde3);
         }
         
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        .badge-fhd {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
         }
         
-        /* Scrollbar personnalisée */
-        ::-webkit-scrollbar {
-            width: 10px;
+        /* Scrollbar */
+        .epg-scroll {
+            max-height: 500px;
+            overflow-y: auto;
         }
         
-        ::-webkit-scrollbar-track {
+        .epg-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .epg-scroll::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.5);
             border-radius: 10px;
         }
         
-        ::-webkit-scrollbar-thumb {
+        .epg-scroll::-webkit-scrollbar-thumb {
             background: var(--primary-gradient);
             border-radius: 10px;
         }
         
-        /* Animations d'entrée */
-        .fade-in-up {
-            animation: fadeInUp 0.8s ease-out;
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
         }
         
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
-        /* Quality badges colors */
-        .badge-4k { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
-        .badge-fhd { background: linear-gradient(135deg, #48dbfb, #0abde3); }
-        .badge-hd { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
-        .badge-sd { background: linear-gradient(135deg, #8395a7, #576574); }
-        .badge-live { background: linear-gradient(135deg, #ff9f43, #ee5253); }
-        
-        /* Channel cards */
-        .channel-card {
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 4px solid transparent;
+        /* Video player adjustments */
+        .video-js {
+            background-color: #000 !important;
         }
         
-        .channel-card:hover {
-            border-left-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .channel-card.active {
-            border-left-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-        
-        /* Stats cards */
-        .stats-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* Loading skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .vjs-poster {
+            background-color: transparent !important;
         }
     </style>
 </head>
-<body class="bg-dark text-light">
-    <!-- Navbar Premium -->
-    <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-glass navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <div class="bg-gradient-primary rounded-circle p-2 me-2">
                     <i class="bi bi-play-circle-fill fs-4"></i>
                 </div>
-                <span class="fw-bold fs-4">SportStream <span class="text-gradient-primary">Pro</span></span>
+                <span class="fw-bold fs-4">IPTV <span class="text-gradient-primary">Premium</span></span>
             </a>
             
             <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="badge bg-success badge-pulse">
-                        <i class="bi bi-circle-fill me-1"></i> LIVE
+                <div id="connectionStatus" class="me-3">
+                    <span class="badge bg-success">
+                        <i class="bi bi-circle-fill me-1"></i> CONNECTÉ
                     </span>
                 </div>
                 <button class="btn btn-gradient-primary" onclick="toggleTheme()">
@@ -213,251 +221,140 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-gradient py-5 mt-5">
-        <div class="container py-5">
-            <div class="row align-items-center">
-                <div class="col-lg-6 fade-in-up">
-                    <h1 class="display-4 fw-bold mb-4">
-                        Stream Sportif <span class="text-warning">Premium</span>
-                    </h1>
-                    <p class="lead mb-4">
-                        Accédez à des centaines de chaînes sportives en qualité HD/4K.
-                        Interface moderne, performances optimisées.
-                    </p>
-                    <div class="d-flex gap-3">
-                        <button class="btn btn-gradient-primary" onclick="showStats()">
-                            <i class="bi bi-bar-chart me-2"></i> Statistiques
-                        </button>
-                        <button class="btn btn-outline-light" onclick="showGuide()">
-                            <i class="bi bi-question-circle me-2"></i> Guide
-                        </button>
+    <!-- Main Content -->
+    <div class="container-fluid py-5 mt-5">
+        <div class="row">
+            <!-- Player Section -->
+            <div class="col-lg-9 col-xl-10">
+                <div class="container py-3">
+                    <div class="player-container mb-4">
+                        <video id="video-player" class="video-js vjs-fluid" controls autoplay preload="auto">
+                            <p class="vjs-no-js">
+                                JavaScript est requis pour ce lecteur.
+                            </p>
+                        </video>
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="position-relative">
-                        <!-- Stats overlay -->
-                        <div id="statsOverlay" class="card-glass p-4 position-absolute top-0 end-0 d-none" style="z-index: 10;">
-                            <h5><i class="bi bi-speedometer2 me-2"></i> Stats Live</h5>
-                            <div class="row text-center mt-3">
-                                <div class="col-4">
-                                    <div class="stats-card">
-                                        <div class="stats-number" id="channelCount">0</div>
-                                        <small>Chaînes</small>
+                    
+                    <!-- Channel Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="channel-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="channel-name" id="currentChannelName">
+                                            Chargement...
+                                        </div>
+                                        <div class="now-playing">
+                                            <i class="bi bi-play-circle me-1"></i>
+                                            <span id="currentProgram">Programme en cours</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stats-card">
-                                        <div class="stats-number" id="qualityHD">0</div>
-                                        <small>HD+</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stats-card">
-                                        <div class="stats-number" id="liveChannels">0</div>
-                                        <small>Live</small>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge badge-quality badge-hd" id="qualityBadge">HD</span>
+                                        <span class="badge bg-dark" id="bufferInfo">Buffer: 0s</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Player -->
-                        <div class="player-container mt-5">
-                            <video id="video-player" class="video-js vjs-theme-forest vjs-fluid" controls preload="auto"
-                                   poster="https://images.unsplash.com/photo-1551958219-acbc608c6377?w=1200&auto=format">
-                                <p class="vjs-no-js">
-                                    JavaScript est requis pour ce lecteur.
-                                </p>
-                            </video>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <div class="container py-5">
-        <!-- Controls -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card-glass p-3">
-                    <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <span class="fw-bold me-2"><i class="bi bi-sliders"></i> Contrôles :</span>
-                        <select id="qualitySelect" class="form-select form-select-sm bg-dark text-light" style="width: auto;">
-                            <option value="auto">🎯 Qualité Auto</option>
-                            <option value="1080">🎬 Full HD (1080p)</option>
-                            <option value="720">📺 HD (720p)</option>
-                            <option value="480">📱 SD (480p)</option>
-                        </select>
-                        <button class="btn btn-sm btn-outline-light" onclick="toggleFullscreen()">
-                            <i class="bi bi-arrows-fullscreen"></i> Plein écran
-                        </button>
-                        <button class="btn btn-sm btn-outline-success" onclick="reloadStream()">
-                            <i class="bi bi-arrow-clockwise"></i> Recharger
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="captureSnapshot()">
-                            <i class="bi bi-camera"></i> Capture
-                        </button>
-                        <div class="ms-auto">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="autoPlay" checked>
-                                <label class="form-check-label" for="autoPlay">Auto-play</label>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-outline-light btn-sm" onclick="toggleFullscreen()">
+                                    <i class="bi bi-arrows-fullscreen"></i> Plein écran
+                                </button>
+                                <button class="btn btn-outline-light btn-sm" onclick="reloadStream()">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#epgModal">
+                                    <i class="bi bi-tv"></i> EPG
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card-glass p-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-dark border-dark">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" id="channelSearch" class="form-control bg-dark text-light border-dark" 
-                               placeholder="Rechercher une chaîne...">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Channels Grid -->
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="fw-bold">
-                        <i class="bi bi-collection-play me-2"></i>
-                        Chaînes Disponibles
-                        <span class="badge bg-primary ms-2" id="totalChannels">0</span>
-                    </h3>
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-outline-light btn-sm active" data-filter="all">Toutes</button>
-                        <button class="btn btn-outline-light btn-sm" data-filter="hd">HD+</button>
-                        <button class="btn btn-outline-light btn-sm" data-filter="live">Live</button>
-                        <button class="btn btn-outline-light btn-sm" data-filter="football">Football</button>
-                    </div>
-                </div>
-                
-                <!-- Loading Skeleton -->
-                <div id="loadingSkeleton" class="row">
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                        <div class="card-glass skeleton" style="height: 100px;"></div>
-                    </div>
-                    <!-- Répéter 8x -->
-                </div>
-                
-                <!-- Channels Container -->
-                <div id="channelsContainer" class="row d-none">
-                    <!-- Les chaînes seront injectées ici -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Info Cards -->
-        <div class="row mt-5">
-            <div class="col-md-4 mb-4">
-                <div class="card-glass h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-gradient-primary rounded-circle p-3 me-3">
-                                <i class="bi bi-shield-check fs-4"></i>
-                            </div>
-                            <h5 class="card-title mb-0">Sécurisé & Privé</h5>
+            
+            <!-- EPG Sidebar -->
+            <div class="col-lg-3 col-xl-2 border-start border-secondary">
+                <div class="sticky-top pt-3" style="top: 80px;">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-tv me-2"></i> Programme TV
+                    </h5>
+                    
+                    <div id="epgSidebar" class="epg-scroll">
+                        <div class="text-center py-5">
+                            <div class="loading-spinner mb-2"></div>
+                            <p class="text-muted">Chargement EPG...</p>
                         </div>
-                        <p class="card-text">
-                            Connexion chiffrée, pas de tracking. Vos données restent privées.
-                        </p>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card-glass h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-gradient-warning rounded-circle p-3 me-3">
-                                <i class="bi bi-lightning-charge fs-4"></i>
-                            </div>
-                            <h5 class="card-title mb-0">Ultra-Rapide</h5>
-                        </div>
-                        <p class="card-text">
-                            Buffer intelligent, préchargement, qualité adaptative.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card-glass h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-gradient-success rounded-circle p-3 me-3">
-                                <i class="bi bi-phone fs-4"></i>
-                            </div>
-                            <h5 class="card-title mb-0">Multi-Device</h5>
-                        </div>
-                        <p class="card-text">
-                            Compatible mobile, tablette, desktop. Interface responsive.
-                        </p>
+                    
+                    <!-- Stream Info -->
+                    <div class="card-glass mt-4 p-3">
+                        <h6 class="fw-bold mb-2">Informations</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-1"><i class="bi bi-check-circle text-success me-2"></i>HLS Supporté</li>
+                            <li class="mb-1"><i class="bi bi-broadcast text-primary me-2"></i>Lecture adaptative</li>
+                            <li class="mb-1"><i class="bi bi-shield-check text-info me-2"></i>Connexion sécurisée</li>
+                            <li><i class="bi bi-database text-warning me-2"></i>EPG: iptv-org.github.io</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-darker py-4 mt-5">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="mb-0">
-                        <i class="bi bi-c-circle"></i> 2024 SportStream Pro. 
-                        <span class="text-muted">Pour usage éducatif.</span>
-                    </p>
+    <!-- EPG Modal (pour mobile) -->
+    <div class="modal fade" id="epgModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">
+                        <i class="bi bi-tv me-2"></i> Guide des Programmes
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-light" onclick="showAbout()">
-                            <i class="bi bi-info-circle"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-light" onclick="refreshChannels()">
-                            <i class="bi bi-arrow-repeat"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-light" onclick="showSettings()">
-                            <i class="bi bi-gear"></i>
-                        </button>
+                <div class="modal-body">
+                    <div id="epgModalContent">
+                        <div class="text-center py-5">
+                            <div class="loading-spinner mb-2"></div>
+                            <p class="text-muted">Chargement EPG...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
 
     <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     
     <!-- Main Application Script -->
     <script>
-        // Configuration globale
+        // Configuration
         const CONFIG = {
-            autoPlay: true,
-            defaultQuality: 'auto',
-            theme: 'dark',
-            volume: 0.8,
-            debug: false
+            epgUrl: "https://iptv-org.github.io/epg/guides/fr.xml",
+            proxies: [
+                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                url => `https://corsproxy.io/?${encodeURIComponent(url)}`
+            ]
         };
         
-        // Initialisation
-        class SportStreamPlayer {
+        // Récupérer l'URL du flux depuis les paramètres
+        const urlParams = new URLSearchParams(window.location.search);
+        const streamUrl = urlParams.get('url');
+        const channelName = urlParams.get('name') || "Chaîne TV";
+        
+        class IPTVPlayer {
             constructor() {
                 this.player = null;
                 this.hls = null;
-                this.channels = [];
-                this.currentChannel = null;
-                this.filter = 'all';
+                this.epgData = [];
+                this.currentChannel = channelName;
                 
                 this.initPlayer();
-                this.loadChannels();
+                this.loadEPG();
                 this.setupEventListeners();
             }
             
@@ -465,7 +362,7 @@
                 this.player = videojs('video-player', {
                     fluid: true,
                     responsive: true,
-                    autoplay: CONFIG.autoPlay,
+                    autoplay: true,
                     playbackRates: [0.5, 1, 1.25, 1.5, 2],
                     controlBar: {
                         children: [
@@ -484,126 +381,21 @@
                         hlsjsConfig: {
                             enableWorker: true,
                             lowLatencyMode: true,
-                            backBufferLength: 90,
-                            manifestLoadingTimeOut: 10000,
-                            manifestLoadingMaxRetry: 3,
-                            levelLoadingTimeOut: 10000,
-                            levelLoadingMaxRetry: 3,
-                            fragLoadingTimeOut: 20000,
-                            fragLoadingMaxRetry: 6
+                            backBufferLength: 90
                         }
                     }
                 });
                 
-                // Gestion des erreurs
-                this.player.on('error', (e) => {
-                    console.error('Player error:', e);
-                    this.showError('Erreur de lecture. Essayer une autre chaîne.');
-                });
-            }
-            
-            async loadChannels() {
-                try {
-                    // Récupérer les chaînes depuis l'URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const channelsParam = urlParams.get('channels');
-                    
-                    if (channelsParam) {
-                        this.channels = JSON.parse(decodeURIComponent(channelsParam));
-                        this.displayChannels();
-                        this.updateStats();
-                        
-                        // Charger la première chaîne HD si disponible
-                        const firstHD = this.channels.find(c => c.quality.includes('HD') || c.quality.includes('FHD'));
-                        if (firstHD) {
-                            this.loadChannel(firstHD);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error loading channels:', error);
-                    this.showError('Erreur de chargement des chaînes');
-                } finally {
-                    // Cacher le skeleton
-                    document.getElementById('loadingSkeleton').classList.add('d-none');
-                    document.getElementById('channelsContainer').classList.remove('d-none');
-                }
-            }
-            
-            displayChannels() {
-                const container = document.getElementById('channelsContainer');
-                container.innerHTML = '';
-                
-                // Filtrer selon le filtre actuel
-                let filtered = this.channels;
-                if (this.filter !== 'all') {
-                    filtered = this.channels.filter(channel => {
-                        if (this.filter === 'hd') {
-                            return channel.quality.includes('HD') || channel.quality.includes('FHD') || channel.quality.includes('4K');
-                        } else if (this.filter === 'live') {
-                            return channel.name.toLowerCase().includes('live');
-                        } else if (this.filter === 'football') {
-                            return channel.name.toLowerCase().includes('football') || 
-                                   channel.name.toLowerCase().includes('soccer') ||
-                                   channel.group.toLowerCase().includes('football');
-                        }
-                        return true;
-                    });
+                // Charger le flux si fourni
+                if (streamUrl) {
+                    this.loadStream(streamUrl);
+                    document.getElementById('currentChannelName').textContent = this.currentChannel;
+                } else {
+                    this.showError("Aucun flux fourni. Ajoutez ?url=votre_flux.m3u8&name=NomChaîne à l'URL");
                 }
                 
-                // Afficher les chaînes
-                filtered.forEach(channel => {
-                    const col = document.createElement('div');
-                    col.className = 'col-lg-3 col-md-4 col-sm-6 mb-3';
-                    
-                    const isActive = this.currentChannel && this.currentChannel.url === channel.url;
-                    
-                    col.innerHTML = `
-                        <div class="channel-card card-glass p-3 ${isActive ? 'active' : ''}" 
-                             onclick="player.loadChannel(${JSON.stringify(channel).replace(/"/g, '&quot;')})">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h6 class="mb-1 fw-bold">${channel.name}</h6>
-                                    <small class="text-muted">${channel.group}</small>
-                                </div>
-                                <span class="badge ${this.getQualityClass(channel.quality)}">
-                                    ${channel.quality}
-                                </span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small><i class="bi bi-translate"></i> ${channel.language || 'Multi'}</small>
-                                ${channel.logo ? `<img src="${channel.logo}" height="20">` : ''}
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.appendChild(col);
-                });
-                
-                // Mettre à jour le compteur
-                document.getElementById('totalChannels').textContent = filtered.length;
-            }
-            
-            loadChannel(channel) {
-                this.currentChannel = channel;
-                
-                // Mettre à jour l'UI
-                document.querySelectorAll('.channel-card').forEach(card => {
-                    card.classList.remove('active');
-                });
-                event.target.closest('.channel-card').classList.add('active');
-                
-                // Mettre à jour le titre
-                document.querySelector('.navbar-brand span').innerHTML = 
-                    `SportStream <span class="text-gradient-primary">Pro</span> • ${channel.name}`;
-                
-                // Charger le stream
-                this.loadStream(channel.url);
-                
-                // Animation
-                event.target.classList.add('animate__animated', 'animate__pulse');
-                setTimeout(() => {
-                    event.target.classList.remove('animate__animated', 'animate__pulse');
-                }, 1000);
+                // Stats buffer
+                setInterval(() => this.updateBufferStats(), 1000);
             }
             
             loadStream(url) {
@@ -618,24 +410,15 @@
                         enableWorker: true,
                         lowLatencyMode: true,
                         backBufferLength: 90,
-                        maxBufferLength: 30,
-                        maxMaxBufferLength: 60,
-                        enableSoftwareAES: true,
-                        manifestLoadingTimeOut: 10000,
-                        manifestLoadingMaxRetry: 3,
-                        levelLoadingTimeOut: 10000,
-                        levelLoadingMaxRetry: 3,
-                        fragLoadingTimeOut: 20000,
-                        fragLoadingMaxRetry: 6,
-                        startFragPrefetch: true
+                        maxBufferLength: 30
                     });
                     
                     this.hls.loadSource(url);
                     this.hls.attachMedia(this.player.tech().el());
                     
                     this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        this.player.play();
-                        this.showSuccess(`Chaîne chargée: ${this.currentChannel.name}`);
+                        console.log("Flux chargé avec succès");
+                        this.updateQualityBadge();
                     });
                     
                     this.hls.on(Hls.Events.ERROR, (event, data) => {
@@ -645,92 +428,223 @@
                 } else if (this.player.canPlayType('application/vnd.apple.mpegurl')) {
                     // Safari native
                     this.player.src({ src: url, type: 'application/x-mpegURL' });
-                    this.player.play();
+                } else {
+                    this.showError("Votre navigateur ne supporte pas la lecture HLS");
+                }
+            }
+            
+            async loadEPG() {
+                try {
+                    const xmlText = await this.fetchWithProxy(CONFIG.epgUrl);
+                    const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+                    
+                    // Trouver le canal correspondant
+                    const channels = xml.getElementsByTagName("channel");
+                    let channelId = null;
+                    
+                    for (let channel of channels) {
+                        const name = channel.getElementsByTagName("display-name")[0]?.textContent;
+                        if (name && name.toLowerCase().includes(this.currentChannel.toLowerCase())) {
+                            channelId = channel.getAttribute("id");
+                            break;
+                        }
+                    }
+                    
+                    if (channelId) {
+                        // Récupérer les programmes
+                        const programs = xml.getElementsByTagName("programme");
+                        this.epgData = [];
+                        
+                        for (let program of programs) {
+                            if (program.getAttribute("channel") === channelId) {
+                                const start = program.getAttribute("start");
+                                const stop = program.getAttribute("stop");
+                                const title = program.getElementsByTagName("title")[0]?.textContent || "Inconnu";
+                                const desc = program.getElementsByTagName("desc")[0]?.textContent || "";
+                                
+                                this.epgData.push({
+                                    start: this.formatEPGTime(start),
+                                    stop: this.formatEPGTime(stop),
+                                    title: title,
+                                    description: desc,
+                                    isNow: this.isCurrentProgram(start, stop)
+                                });
+                            }
+                        }
+                        
+                        // Trier par heure et limiter à 20
+                        this.epgData.sort((a, b) => a.start.localeCompare(b.start));
+                        this.epgData = this.epgData.slice(0, 20);
+                        
+                        // Afficher EPG
+                        this.displayEPG();
+                        
+                        // Mettre à jour le programme en cours
+                        const current = this.epgData.find(p => p.isNow);
+                        if (current) {
+                            document.getElementById('currentProgram').textContent = current.title;
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error("Erreur EPG:", error);
+                    this.displayEPGError();
+                }
+            }
+            
+            formatEPGTime(epgTime) {
+                // Format: 20240101120000 -> 12:00
+                if (epgTime.length >= 12) {
+                    const hour = epgTime.substring(8, 10);
+                    const minute = epgTime.substring(10, 12);
+                    return `${hour}:${minute}`;
+                }
+                return epgTime;
+            }
+            
+            isCurrentProgram(startTime, stopTime) {
+                const now = new Date();
+                const start = this.parseEPGDate(startTime);
+                const stop = this.parseEPGDate(stopTime);
+                return now >= start && now <= stop;
+            }
+            
+            parseEPGDate(epgTime) {
+                // Format: 20240101120000
+                if (epgTime.length === 14) {
+                    const year = epgTime.substring(0, 4);
+                    const month = epgTime.substring(4, 6);
+                    const day = epgTime.substring(6, 8);
+                    const hour = epgTime.substring(8, 10);
+                    const minute = epgTime.substring(10, 12);
+                    return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+                }
+                return new Date();
+            }
+            
+            displayEPG() {
+                const sidebar = document.getElementById('epgSidebar');
+                const modal = document.getElementById('epgModalContent');
+                
+                if (this.epgData.length === 0) {
+                    sidebar.innerHTML = '<div class="text-center py-4 text-muted">Aucun programme disponible</div>';
+                    modal.innerHTML = '<div class="text-center py-4 text-muted">Aucun programme disponible</div>';
+                    return;
+                }
+                
+                let html = '';
+                this.epgData.forEach((program, index) => {
+                    const isNow = program.isNow;
+                    const isPlaying = index === 0 && isNow;
+                    
+                    html += `
+                        <div class="epg-item ${isNow ? 'playing' : ''} ${isPlaying ? 'active' : ''}">
+                            <div class="d-flex">
+                                <div class="epg-time">${program.start}</div>
+                                <div class="flex-grow-1">
+                                    <div class="epg-title">${program.title}</div>
+                                    ${program.description ? `<div class="epg-desc">${program.description}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                sidebar.innerHTML = html;
+                modal.innerHTML = html;
+            }
+            
+            displayEPGError() {
+                const html = '<div class="text-center py-4 text-muted"><i class="bi bi-exclamation-triangle me-2"></i>EPG indisponible</div>';
+                document.getElementById('epgSidebar').innerHTML = html;
+                document.getElementById('epgModalContent').innerHTML = html;
+            }
+            
+            async fetchWithProxy(url) {
+                for (let proxy of CONFIG.proxies) {
+                    try {
+                        const response = await fetch(proxy(url));
+                        if (response.ok) return await response.text();
+                    } catch (error) {
+                        console.warn(`Proxy ${proxy.name || 'inconnu'} a échoué`);
+                    }
+                }
+                throw new Error("Tous les proxys ont échoué");
+            }
+            
+            updateQualityBadge() {
+                if (this.hls && this.hls.levels && this.hls.levels.length > 0) {
+                    const level = this.hls.levels[this.hls.currentLevel];
+                    if (level && level.height) {
+                        let quality = "SD";
+                        if (level.height >= 1080) quality = "FHD";
+                        else if (level.height >= 720) quality = "HD";
+                        
+                        const badge = document.getElementById('qualityBadge');
+                        badge.textContent = quality;
+                        badge.className = `badge badge-quality ${quality === 'FHD' ? 'badge-fhd' : 'badge-hd'}`;
+                    }
+                }
+            }
+            
+            updateBufferStats() {
+                if (this.player && this.player.buffered() && this.player.buffered().length > 0) {
+                    const buffered = this.player.buffered().end(0) - this.player.currentTime();
+                    document.getElementById('bufferInfo').textContent = `Buffer: ${buffered.toFixed(1)}s`;
                 }
             }
             
             handleHlsError(data) {
                 console.error('HLS Error:', data);
                 
+                const status = document.getElementById('connectionStatus');
+                status.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> ERREUR</span>';
+                
                 if (data.fatal) {
                     switch(data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            this.showError('Erreur réseau. Reconnexion...');
-                            this.hls.startLoad();
+                            this.showError("Erreur réseau. Reconnexion...");
+                            setTimeout(() => {
+                                if (this.hls) this.hls.startLoad();
+                            }, 2000);
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            this.showError('Erreur média. Réessai...');
                             this.hls.recoverMediaError();
                             break;
                         default:
-                            this.showError('Erreur fatale. Changement de chaîne...');
-                            this.hls.destroy();
-                            // Essayer la chaîne suivante
-                            const currentIndex = this.channels.findIndex(c => c.url === this.currentChannel.url);
-                            const nextChannel = this.channels[(currentIndex + 1) % this.channels.length];
-                            if (nextChannel) {
-                                this.loadChannel(nextChannel);
-                            }
+                            this.showError("Erreur de lecture");
                             break;
                     }
                 }
             }
             
-            updateStats() {
-                const hdCount = this.channels.filter(c => 
-                    c.quality.includes('HD') || c.quality.includes('FHD') || c.quality.includes('4K')
-                ).length;
-                
-                const liveCount = this.channels.filter(c => 
-                    c.name.toLowerCase().includes('live')
-                ).length;
-                
-                document.getElementById('channelCount').textContent = this.channels.length;
-                document.getElementById('qualityHD').textContent = hdCount;
-                document.getElementById('liveChannels').textContent = liveCount;
-            }
-            
-            getQualityClass(quality) {
-                const q = quality.toLowerCase();
-                if (q.includes('4k')) return 'badge-4k';
-                if (q.includes('fhd') || q.includes('1080')) return 'badge-fhd';
-                if (q.includes('hd') || q.includes('720')) return 'badge-hd';
-                if (q.includes('sd') || q.includes('480')) return 'badge-sd';
-                if (q.includes('live')) return 'badge-live';
-                return 'bg-secondary';
-            }
-            
             showError(message) {
-                // Implémenter un toast d'erreur
-                console.error('Error:', message);
+                // Notification simple
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger position-fixed top-0 end-0 m-3';
+                alert.style.zIndex = '9999';
+                alert.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close btn-close-white float-end" onclick="this.parentElement.remove()"></button>
+                `;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    if (alert.parentElement) alert.remove();
+                }, 5000);
             }
             
-            showSuccess(message) {
-                // Implémenter un toast de succès
-                console.log('Success:', message);
+            setupEventListeners() {
+                // Auto-update EPG toutes les 5 minutes
+                setInterval(() => this.loadEPG(), 300000);
             }
         }
         
         // Initialiser l'application
         let player;
         document.addEventListener('DOMContentLoaded', () => {
-            player = new SportStreamPlayer();
-            
-            // Filtrer les chaînes
-            document.querySelectorAll('[data-filter]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    player.filter = this.dataset.filter;
-                    player.displayChannels();
-                });
-            });
-            
-            // Recherche de chaînes
-            document.getElementById('channelSearch').addEventListener('input', _.debounce(function(e) {
-                const searchTerm = e.target.value.toLowerCase();
-                // Implémenter la recherche
-            }, 300));
+            player = new IPTVPlayer();
         });
         
         // Fonctions globales
@@ -743,14 +657,9 @@
         }
         
         function reloadStream() {
-            if (player.currentChannel) {
-                player.loadChannel(player.currentChannel);
+            if (streamUrl) {
+                player.loadStream(streamUrl);
             }
-        }
-        
-        function captureSnapshot() {
-            // Capture d'écran du player
-            alert('Fonction capture à implémenter');
         }
         
         function toggleTheme() {
@@ -759,14 +668,26 @@
             html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
         }
         
-        function showStats() {
-            const overlay = document.getElementById('statsOverlay');
-            overlay.classList.toggle('d-none');
-        }
-        
-        function refreshChannels() {
-            location.reload();
+        // Redirection si pas d'URL
+        if (!streamUrl) {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.innerHTML = `
+                    <div class="container vh-100 d-flex justify-content-center align-items-center">
+                        <div class="card-glass p-5 text-center">
+                            <i class="bi bi-tv fs-1 text-primary mb-3"></i>
+                            <h3 class="mb-3">Lecteur IPTV Premium</h3>
+                            <p class="mb-4">Ajoutez l'URL du flux dans l'adresse:</p>
+                            <code class="d-block p-3 bg-dark rounded mb-4">
+                                ?url=votre_flux.m3u8&name=Nom de la Chaîne
+                            </code>
+                            <button class="btn btn-gradient-primary" onclick="location.href='?'">
+                                <i class="bi bi-arrow-return-left me-2"></i>Retour
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
-                                                         </html>
+                </html>
